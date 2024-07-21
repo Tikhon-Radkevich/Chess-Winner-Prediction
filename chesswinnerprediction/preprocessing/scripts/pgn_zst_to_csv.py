@@ -22,7 +22,6 @@ HEADER_TITLES = [
 ]
 MOVE_TITLES = ["chess_moves_list", "evaluations_list", "times_list"]
 DATA_TITLES = HEADER_TITLES + MOVE_TITLES
-DATA = {title: [] for title in DATA_TITLES}
 HEADER_TITLES_SET = set(HEADER_TITLES)
 
 
@@ -55,20 +54,20 @@ def process_moves_and_evals_and_ckl(moves):
     return chess_moves, evaluations, times
 
 
-def process_and_add_moves(moves):
+def process_and_add_moves(moves, data):
     chess_moves, evaluations, times = process_moves_and_evals_and_ckl(moves)
 
-    DATA["chess_moves_list"].append(chess_moves)
-    DATA["evaluations_list"].append(evaluations)
-    DATA["times_list"].append(times)
+    data["chess_moves_list"].append(chess_moves)
+    data["evaluations_list"].append(evaluations)
+    data["times_list"].append(times)
 
 
-def process_and_add_headers(headers):
+def process_and_add_headers(headers, data):
     header_set_names = HEADER_TITLES_SET.copy()
 
     def add_none_to_data():
         for header_name in header_set_names:
-            DATA[header_name].append(None)
+            data[header_name].append(None)
 
     def convert_to_string(x):
         return x.decode("utf-8")[1:-1].split(" ", 1)
@@ -76,28 +75,31 @@ def process_and_add_headers(headers):
     headers = headers.split(b"\n")
     for header in headers:
         name, value = convert_to_string(header)
-        if name in DATA:
+        if name in HEADER_TITLES_SET:
             header_set_names.remove(name)
-            DATA[name].append(value[1:-1])
+            data[name].append(value[1:-1])
 
     add_none_to_data()
 
 
-def save_df_and_clear_data(df_file_path):
-    print(f"Saving data to {df_file_path}")
-    df = pd.DataFrame(DATA)
-    df.to_csv(df_file_path, index=False)
-    for data in DATA.values():
-        data.clear()
+def save_df_and_clear_data(df_dir_path, data, idx):
+    file_path_with_idx = os.path.join(df_dir_path, f"data_{idx}.csv")
+    print(f"\nSaving data to {file_path_with_idx}")
+    pd.DataFrame(data).to_csv(file_path_with_idx, index=False)
+    for values in data.values():
+        values.clear()
 
 
-def pgn_zst_to_dataframe(pgn_zst_path, df_file_path):
+def pgn_zst_to_dataframe(pgn_zst_path, df_dir_path, split_size=125000):
     MOVES_PATTERN = b"] [%clk "
     ZST_COMPRESSION_INDEX = (
         7.1  # info from https://database.lichess.org/#standard_games
     )
     estimated_total_size = os.path.getsize(pgn_zst_path) * ZST_COMPRESSION_INDEX
     print(f"Estimated total size: ~{estimated_total_size / (1024 ** 3):.1f}GB")
+
+    data = {title: [] for title in DATA_TITLES}
+    file_idx = 0
 
     with open(pgn_zst_path, "rb") as compressed_file:
         with zstd.ZstdDecompressor().stream_reader(compressed_file) as reader:
@@ -110,7 +112,12 @@ def pgn_zst_to_dataframe(pgn_zst_path, df_file_path):
                         header_part = part
                         part, buffer = buffer.split(b"\n\n", maxsplit=1)
                         if MOVES_PATTERN in part:
-                            process_and_add_headers(header_part)
-                            process_and_add_moves(part)
+                            process_and_add_headers(header_part, data)
+                            process_and_add_moves(part, data)
 
-    save_df_and_clear_data(df_file_path)
+                        if len(data["chess_moves_list"]) >= split_size:
+                            save_df_and_clear_data(df_dir_path, data, file_idx)
+                            file_idx += 1
+
+    save_df_and_clear_data(df_dir_path, data, file_idx)
+

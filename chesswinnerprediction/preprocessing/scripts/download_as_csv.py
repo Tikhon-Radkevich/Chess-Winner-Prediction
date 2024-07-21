@@ -19,14 +19,16 @@ def main(url):
         )
 
     file_path = download_file(url, EXTERNAL_FOLDER_PATH)
+    file_name = os.path.basename(file_path)
 
-    csv_file_name = file_path.split("/")[-1].replace(".pgn.zst", ".csv")
-    csv_file_path = os.path.join(RAW_FOLDER_PATH, csv_file_name)
-    if os.path.exists(csv_file_path):
-        print(f"File already exists at: {os.path.abspath(csv_file_path)}")
-        return
+    csv_files_dir_name = file_name.replace(".pgn.zst", "")
+    csv_files_dir = os.path.join(RAW_FOLDER_PATH, str(csv_files_dir_name))
+    if os.path.exists(csv_files_dir):
+        raise ValueError(f"To process {file_name} again, delete the directory: {os.path.abspath(csv_files_dir)}")
 
-    pgn_zst_to_dataframe(file_path, csv_file_path)
+    os.makedirs(csv_files_dir)
+
+    pgn_zst_to_dataframe(file_path, os.path.abspath(csv_files_dir))
 
 
 if __name__ == "__main__":
