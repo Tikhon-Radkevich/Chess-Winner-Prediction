@@ -12,7 +12,7 @@ def download_file(url, dest_folder):
     file_path = os.path.join(dest_folder, filename)
 
     if os.path.exists(file_path):
-        print(f"File already exists at: {file_path}")
+        print(f"File already exists at: {os.path.abspath(file_path)}")
         return file_path
 
     print(f"Starting downloading {url}")
@@ -27,5 +27,5 @@ def download_file(url, dest_folder):
                     pbar.update(len(data))
                     out_file.write(data)
 
-    print(f"File downloaded to: {file_path}")
+    print(f"File downloaded to: {os.path.abspath(file_path)}")
     return file_path

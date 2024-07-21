@@ -6,9 +6,19 @@ import pandas as pd
 
 
 HEADER_TITLES = [
-    "Event", "Site", "White", "Black", "Result", "WhiteElo",
-    "BlackElo", "WhiteRatingDiff", "BlackRatingDiff", "ECO",
-    "Opening", "TimeControl", "Termination"
+    "Event",
+    "Site",
+    "White",
+    "Black",
+    "Result",
+    "WhiteElo",
+    "BlackElo",
+    "WhiteRatingDiff",
+    "BlackRatingDiff",
+    "ECO",
+    "Opening",
+    "TimeControl",
+    "Termination",
 ]
 MOVE_TITLES = ["chess_moves_list", "evaluations_list", "times_list"]
 DATA_TITLES = HEADER_TITLES + MOVE_TITLES
@@ -83,7 +93,9 @@ def save_df_and_clear_data(df_file_path):
 
 def pgn_zst_to_dataframe(pgn_zst_path, df_file_path):
     MOVES_PATTERN = b"] [%clk "
-    ZST_COMPRESSION_INDEX = 7.1  # info from https://database.lichess.org/#standard_games
+    ZST_COMPRESSION_INDEX = (
+        7.1  # info from https://database.lichess.org/#standard_games
+    )
     estimated_total_size = os.path.getsize(pgn_zst_path) * ZST_COMPRESSION_INDEX
     print(f"Estimated total size: ~{estimated_total_size / (1024 ** 3):.1f}GB")
 
@@ -102,4 +114,3 @@ def pgn_zst_to_dataframe(pgn_zst_path, df_file_path):
                             process_and_add_moves(part)
 
     save_df_and_clear_data(df_file_path)
-
