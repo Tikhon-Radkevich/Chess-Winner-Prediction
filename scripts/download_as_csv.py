@@ -28,7 +28,7 @@ def main(url):
 
     os.makedirs(csv_files_dir)
 
-    pgn_zst_to_dataframe(file_path, csv_files_dir)
+    pgn_zst_to_dataframe(file_path, csv_files_dir, split_size=25000)
 
 
 if __name__ == "__main__":
