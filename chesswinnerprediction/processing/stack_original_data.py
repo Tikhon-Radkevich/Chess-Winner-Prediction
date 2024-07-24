@@ -14,9 +14,9 @@ BLACK_WIN = "0-1"
 DRAW = "1/2-1/2"
 
 RESULTS = {
-    WHITE_WIN: 1,
-    BLACK_WIN: 0,
-    DRAW: -1
+    WHITE_WIN: 0,
+    BLACK_WIN: 1,
+    DRAW: 2
 }
 
 
@@ -25,7 +25,7 @@ def process_elo(data: pd.DataFrame) -> pd.DataFrame:
     data["BlackElo"] = data["BlackElo"].astype(np.int16)
     data["MeanElo"] = ((data["WhiteElo"] + data["BlackElo"]) / 2).astype(np.float32)
     data["EloDiff"] = (data["WhiteElo"] - data["BlackElo"]).astype(np.int16)
-    data["EloDiffAbs"] = data["EloDiff"].abs().astype(np.int16)
+    # data["EloDiffAbs"] = data["EloDiff"].abs().astype(np.int16)
     return data
 
 
@@ -39,9 +39,9 @@ def process_time_control(data: pd.DataFrame) -> pd.DataFrame:
 
 def process_result(data: pd.DataFrame) -> pd.DataFrame:
     data["ResultEncoded"] = data["Result"].map(RESULTS)
-    data["WhiteWin"] = (data["Result"] == "1-0").astype(np.int8)
-    data["BlackWin"] = (data["Result"] == "0-1").astype(np.int8)
-    data["Draw"] = (data["Result"] == "1/2-1/2").astype(np.int8)
+    data["WhiteWin"] = (data["Result"] == WHITE_WIN).astype(np.int8)
+    data["BlackWin"] = (data["Result"] == BLACK_WIN).astype(np.int8)
+    data["Draw"] = (data["Result"] == DRAW).astype(np.int8)
     return data
 
 
@@ -64,7 +64,7 @@ def process_data_df(data: pd.DataFrame) -> pd.DataFrame:
     df = df[df["Result"] != "*"]
 
     df["Event"] = df["Event"].str.split(" http").str[0]
-    df = pd.get_dummies(df, columns=["Event"], dtype=np.int8, prefix="", prefix_sep="")
+    # df = pd.get_dummies(df, columns=["Event"], dtype=np.int8, prefix="", prefix_sep="")
 
     df = process_elo(df)
     df = process_time_control(df)
@@ -88,6 +88,7 @@ def concat_raw_data(dir_path, output_file):
             data_frames.append(data)
 
     combined_data = pd.concat(data_frames, ignore_index=True)
+    print(f"Saving data to {output_file}")
     combined_data.to_csv(output_file, index=False)
 
 
