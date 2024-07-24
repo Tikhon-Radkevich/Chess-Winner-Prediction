@@ -7,7 +7,7 @@ from chesswinnerprediction import concat_raw_data
 
 def main(dir_name):
     file_name = os.path.basename(dir_name)
-    file_path = os.path.join(PROCESSED_FOLDER_PATH, file_name, ".csv")
+    file_path = os.path.join(PROCESSED_FOLDER_PATH, file_name + ".csv")
     concat_raw_data(dir_name, file_path)
 
 
