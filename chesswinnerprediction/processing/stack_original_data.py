@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 
-BASELINE_COLUMNS = ["Event", "WhiteElo", "BlackElo", "TimeControl", "Result",]
+BASELINE_COLUMNS = ["Event", "WhiteElo", "BlackElo", "TimeControl", "Result", "times_list"]
 TARGET_COLUMNS = ["ResultEncoded", "WhiteWin", "BlackWin", "Draw"]
 
 WHITE_WIN = "1-0"
@@ -18,6 +18,11 @@ RESULTS = {
     BLACK_WIN: 1,
     DRAW: 2
 }
+
+MIN_GAME_DURATION = 0  # seconds
+
+# TODO add min moves value
+# MIN_MOVES_IN_GAME = 4
 
 
 def process_elo(data: pd.DataFrame) -> pd.DataFrame:
@@ -59,6 +64,30 @@ def drop_columns(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+def parse_times_list_to_seconds(time_list_str):
+    def time_str_to_seconds(time_str):
+        h, m, s = map(int, time_str.split(":"))
+        return h * 3600 + m * 60 + s
+
+    time_list = time_list_str[2:-2].split("', '")
+    return [time_str_to_seconds(time_str) for time_str in time_list]
+
+
+def calc_game_duration(time_and_increment):
+    time_list, increment_time = time_and_increment.values
+    increment = (len(time_list) - 2) * increment_time
+    return sum(time_list[:2]) - sum(time_list[-2:]) + increment
+
+
+def process_moves_time(data: pd.DataFrame) -> pd.DataFrame:
+    data["times_in_second"] = data["times_list"].apply(parse_times_list_to_seconds)
+    data.drop(columns=["times_list"], inplace=True)
+
+    data["GameDuration"] = data[["times_in_second", "IncrementTime"]].apply(calc_game_duration, axis=1)
+    data = data[data["GameDuration"] > MIN_GAME_DURATION]
+    return data
+
+
 def process_data_df(data: pd.DataFrame) -> pd.DataFrame:
     df = data[BASELINE_COLUMNS]
     df = df[df["Result"] != "*"]
@@ -66,9 +95,13 @@ def process_data_df(data: pd.DataFrame) -> pd.DataFrame:
     df["Event"] = df["Event"].str.split(" http").str[0]
     # df = pd.get_dummies(df, columns=["Event"], dtype=np.int8, prefix="", prefix_sep="")
 
+    # header data
     df = process_elo(df)
     df = process_time_control(df)
     df = process_result(df)
+
+    # move data
+    df = process_moves_time(df)
 
     df = add_external_features(df)
 
