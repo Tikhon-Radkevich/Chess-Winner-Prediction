@@ -20,7 +20,7 @@ HEADER_TITLES = [
     "TimeControl",
     "Termination",
 ]
-MOVE_TITLES = ["chess_moves_list", "evaluations_list", "times_list"]
+MOVE_TITLES = ["chess_moves_list", "evaluations_list", "times_list", "parse_success"]
 DATA_TITLES = HEADER_TITLES + MOVE_TITLES
 HEADER_TITLES_SET = set(HEADER_TITLES)
 
@@ -29,57 +29,41 @@ def process_moves_and_evals_and_ckl(moves):
     moves = moves.replace(b"!", b"").replace(b"?", b"").decode("utf-8")
     split_moves = moves.split(". ")[1:]
 
+    parse_success = True
     chess_moves, evaluations, times = [], [], []
-    for move_data in split_moves:
-        move_parts = move_data.split(" ")
-        if len(move_parts) > 8:
+    for move_parts in map(str.split, split_moves):
+        if len(move_parts) != 8:
+            parse_success = False
             break
 
         chess_move = move_parts[0]
-        evaluation, clk = None, None
-
-        if len(move_parts) == 8:
-            evaluation = move_parts[3][:-1]
-            clk = move_parts[5][:-1]
-        elif len(move_parts) == 6:
-            if move_parts[2] == "%eval":
-                evaluation = move_parts[3][:-1]
-            else:
-                clk = move_parts[3][:-1]
+        evaluation = move_parts[3][:-1]
+        clk = move_parts[5][:-1]
 
         chess_moves.append(chess_move)
         evaluations.append(evaluation)
         times.append(clk)
 
-    return chess_moves, evaluations, times
+    return chess_moves, evaluations, times, parse_success
 
 
 def process_and_add_moves(moves, data):
-    chess_moves, evaluations, times = process_moves_and_evals_and_ckl(moves)
+    chess_moves, evaluations, times, parse_success = process_moves_and_evals_and_ckl(moves)
 
     data["chess_moves_list"].append(chess_moves)
     data["evaluations_list"].append(evaluations)
     data["times_list"].append(times)
+    data["parse_success"].append(parse_success)
 
 
 def process_and_add_headers(headers, data):
-    header_set_names = HEADER_TITLES_SET.copy()
+    header_data = {}
+    for header in headers.split(b"\n"):
+        name, value = header.decode("utf-8")[1:-1].split(" ", 1)
+        header_data[name] = value[1:-1]
 
-    def add_none_to_data():
-        for header_name in header_set_names:
-            data[header_name].append(None)
-
-    def convert_to_string(x):
-        return x.decode("utf-8")[1:-1].split(" ", 1)
-
-    headers = headers.split(b"\n")
-    for header in headers:
-        name, value = convert_to_string(header)
-        if name in HEADER_TITLES_SET:
-            header_set_names.remove(name)
-            data[name].append(value[1:-1])
-
-    add_none_to_data()
+    for name in HEADER_TITLES:
+        data[name].append(header_data.get(name, None))
 
 
 def save_df_and_clear_data(df_dir_path, data, idx):
