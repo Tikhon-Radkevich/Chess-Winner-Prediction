@@ -6,6 +6,9 @@ from chesswinnerprediction import concat_raw_data
 
 
 def main(dir_name):
+    if not os.path.exists(PROCESSED_FOLDER_PATH):
+        os.makedirs(PROCESSED_FOLDER_PATH)
+
     file_name = os.path.basename(dir_name)
     file_path = os.path.join(PROCESSED_FOLDER_PATH, file_name + ".csv")
     concat_raw_data(dir_name, file_path)
