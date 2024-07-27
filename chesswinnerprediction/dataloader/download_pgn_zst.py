@@ -8,7 +8,9 @@ def download_file(url, dest_folder):
     if not os.path.exists(dest_folder):
         os.makedirs(dest_folder)
 
-    filename = url.split("/")[-1]
+    # todo remove this)
+    # filename = url.split("/")[-1]
+    filename = os.path.basename(url)
     file_path = os.path.join(dest_folder, filename)
 
     if os.path.exists(file_path):

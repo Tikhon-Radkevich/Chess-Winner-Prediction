@@ -26,6 +26,7 @@ HEADER_TITLES_SET = set(HEADER_TITLES)
 
 
 def process_moves_and_evals_and_ckl(moves):
+    # TODO: process "?" and "!" in moves
     moves = moves.replace(b"!", b"").replace(b"?", b"").decode("utf-8")
     split_moves = moves.split(". ")[1:]
 
