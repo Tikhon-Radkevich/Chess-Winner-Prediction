@@ -1,7 +1,7 @@
 import os
 import argparse
 
-from constants import (
+from chesswinnerprediction.constants import (
     MIN_DATE,
     EXAMPLE_URL,
     EXTERNAL_FOLDER_PATH,

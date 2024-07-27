@@ -1,8 +1,8 @@
 import os
 import argparse
 
-from constants import RAW_FOLDER_PATH, PROCESSED_FOLDER_PATH, EXAMPLE_CSV_DIR
-from chesswinnerprediction import concat_raw_data
+from chesswinnerprediction.constants import RAW_FOLDER_PATH, PROCESSED_FOLDER_PATH, EXAMPLE_CSV_DIR
+from chesswinnerprediction import process_and_concat_raw_data
 
 
 def main(dir_name):
@@ -11,7 +11,7 @@ def main(dir_name):
 
     file_name = os.path.basename(dir_name)
     file_path = os.path.join(PROCESSED_FOLDER_PATH, file_name + ".csv")
-    concat_raw_data(dir_name, file_path)
+    process_and_concat_raw_data(dir_name, file_path)
 
 
 if __name__ == "__main__":
