@@ -1,6 +1,6 @@
 import numpy as np
 
-from chesswinnerprediction.processing.process_and_concat_raw_data import (
+from chesswinnerprediction.constants import (
     WHITE_WIN_STR,
     BLACK_WIN_STR,
     DRAW_STR
