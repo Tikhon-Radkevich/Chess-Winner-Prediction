@@ -4,7 +4,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import pandas as pd
 from tqdm import tqdm
 
-from utils import process_file
+from chesswinnerprediction.processing.utils import process_file
 
 
 def process_and_concat_raw_data(dir_path, output_file):
