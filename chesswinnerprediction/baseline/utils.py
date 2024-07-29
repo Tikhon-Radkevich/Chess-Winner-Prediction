@@ -1,10 +1,22 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import ConfusionMatrixDisplay, classification_report, confusion_matrix, log_loss
 
 from chesswinnerprediction.constants import RESULTS_STR_TO_STR, DRAW_STR
+
+
+def show_feature_importance(model, feature_importance):
+    importance_df = pd.DataFrame({"Feature": model.feature_names_in_, "Importance": feature_importance})
+    importance_df.sort_values(by="Importance", ascending=False, inplace=True)
+    plt.barh(importance_df["Feature"], importance_df["Importance"], color="skyblue")
+    plt.xlabel("Importance")
+    plt.ylabel("Feature")
+    plt.title("Feature Importance")
+    plt.gca().invert_yaxis()
+    plt.show()
 
 
 def estimate_baseline_model(model, x_test, y_test, feature_importance):
@@ -25,14 +37,7 @@ def estimate_baseline_model(model, x_test, y_test, feature_importance):
     plt.title("Confusion Matrix")
     plt.show()
 
-    importance_df = pd.DataFrame({"Feature": model.feature_names_in_, "Importance": feature_importance})
-    importance_df.sort_values(by="Importance", ascending=False, inplace=True)
-    plt.barh(importance_df["Feature"], importance_df["Importance"], color="skyblue")
-    plt.xlabel("Importance")
-    plt.ylabel("Feature")
-    plt.title("Feature Importance")
-    plt.gca().invert_yaxis()
-    plt.show()
+    show_feature_importance(model, feature_importance)
 
 
 def get_class_weights(y, verbose=False):
@@ -55,3 +60,17 @@ def get_x_and_y(data, predict_draws=False):
     y_data = data["Result"]
 
     return x_data, y_data
+
+
+def print_combined_report(model, x1, x2, y1, y2, report_title_1="Train Report", report_title_2="Validation Report"):
+    predict_1 = model.predict(x1)
+    predict_2 = model.predict(x2)
+
+    report_1 = classification_report(y1, predict_1, zero_division=np.nan)
+    report_2 = classification_report(y2, predict_2, zero_division=np.nan)
+
+    print("\t" * 6, report_title_1, "\t" * 9, report_title_2)
+    for part_1, part_2 in zip(report_1.split("\n\n"), report_2.split("\n\n")):
+        for val_1, val_2 in zip(part_1.split("\n"), part_2.split("\n")):
+            print(val_1, " " * 6 + val_2[12:])
+
