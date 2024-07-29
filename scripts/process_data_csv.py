@@ -1,16 +1,16 @@
 import os
 import argparse
 
-from chesswinnerprediction.constants import RAW_FOLDER_PATH, PROCESSED_FOLDER_PATH, EXAMPLE_CSV_DIR
+from chesswinnerprediction.constants import RAW_FOLDER_PATH, EXAMPLE_CSV_DIR, INTERIM_FOLDER_PATH
 from chesswinnerprediction import process_and_concat_raw_data
 
 
 def main(dir_name):
-    if not os.path.exists(PROCESSED_FOLDER_PATH):
-        os.makedirs(PROCESSED_FOLDER_PATH)
+    if not os.path.exists(INTERIM_FOLDER_PATH):
+        os.makedirs(INTERIM_FOLDER_PATH)
 
     file_name = os.path.basename(dir_name)
-    file_path = os.path.join(PROCESSED_FOLDER_PATH, file_name + ".csv")
+    file_path = os.path.join(INTERIM_FOLDER_PATH, file_name + ".csv")
     process_and_concat_raw_data(dir_name, file_path)
 
 
