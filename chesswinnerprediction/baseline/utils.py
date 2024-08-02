@@ -72,7 +72,7 @@ def print_report(
     predict_2 = model.predict(x2)
     report_2 = classification_report(y2, predict_2, zero_division=np.nan)
 
-    print("\t" * 6, report_title_1, "\t" * 9, report_title_2)
+    print(" " * 24, report_title_1, " " * 36, report_title_2)
     for part_1, part_2 in zip(report_1.split("\n\n"), report_2.split("\n\n")):
         for val_1, val_2 in zip(part_1.split("\n"), part_2.split("\n")):
             print(val_1, " " * 6 + val_2[12:])
