@@ -9,13 +9,14 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix,
     log_loss,
+    balanced_accuracy_score,
 )
 
 from chesswinnerprediction.constants import RESULTS_STR_TO_STR, DRAW_STR
 from chesswinnerprediction.baseline.constants import BASELINE_COLUMNS, columns_to_scale
 
 
-def show_feature_importance(model, feature_importance):
+def show_feature_importance(model, feature_importance, grid_y=False):
     labels = [RESULTS_STR_TO_STR[label] for label in model.classes_]
     num_classes = len(feature_importance)
     importance_dfs = []
@@ -28,6 +29,7 @@ def show_feature_importance(model, feature_importance):
 
     if num_classes == 1:
         fig_size = (7, 5)
+        labels = ["Feature Importance"]
     else:
         fig_size = (15, 5)
     _, axes = plt.subplots(ncols=num_classes, figsize=fig_size, sharey=True)
@@ -46,6 +48,8 @@ def show_feature_importance(model, feature_importance):
 
         axes[i].set_xlabel("Importance", fontsize=12)
         axes[i].set_title(labels[i], fontsize=14)
+        if grid_y:
+            axes[i].grid(axis="y")
         axes[i].invert_yaxis()
 
     axes[0].set_ylabel("Feature", fontsize=12)
@@ -65,8 +69,10 @@ def print_report(
 ):
     predict_1 = model.predict(x1)
     report_1 = classification_report(y1, predict_1, zero_division=np.nan)
+
+    print("\n" + " " * 48 + "Classification Report")
     if x2 is None:
-        print("\n" + "\t" * 6 + f"Classification Report \n{report_1}")
+        print(report_1)
         return
 
     predict_2 = model.predict(x2)
@@ -85,7 +91,10 @@ def estimate_baseline_model(
     prob_predict = model.predict_proba(x_test)
 
     loss = log_loss(y_test, prob_predict)
-    print(f"log loss on test data: {loss}\n")
+    print(f"Log Loss on test data: {round(loss, 4)}")
+
+    weighted_accuracy = balanced_accuracy_score(y_test, predict)
+    print(f"Balanced Accuracy on test data: {round(weighted_accuracy*100, 2)}%\n")
 
     print_report(model, x_train, y_train, x_test, y_test)
 
@@ -97,7 +106,8 @@ def estimate_baseline_model(
     plt.title("Confusion Matrix")
     plt.show()
 
-    show_feature_importance(model, feature_importance)
+    if feature_importance is not None:
+        show_feature_importance(model, feature_importance)
 
 
 def get_class_weights(y, verbose=False):
@@ -122,10 +132,10 @@ def get_x_and_y(data, predict_draws=False):
     return x_data, y_data
 
 
-def transform_and_scale_df(df, scaler, fit_scale=True):
+def transform_and_scale_df(df, scaler, fit_scaler=True):
     X = df[BASELINE_COLUMNS].copy()
     X = pd.get_dummies(X, columns=["Event"], dtype=np.int8, prefix="", prefix_sep="")
-    if fit_scale:
+    if fit_scaler:
         X[columns_to_scale] = scaler.fit_transform(X[columns_to_scale])
     else:
         X[columns_to_scale] = scaler.transform(X[columns_to_scale])
