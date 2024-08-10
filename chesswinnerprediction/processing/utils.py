@@ -15,6 +15,7 @@ def process_elo(data: pd.DataFrame) -> pd.DataFrame:
     data["WhiteElo"] = data["WhiteElo"].astype(np.int16)
     data["BlackElo"] = data["BlackElo"].astype(np.int16)
     data["EloDiff"] = (data["WhiteElo"] - data["BlackElo"]).astype(np.int16)
+    data["MeanElo"] = ((data["WhiteElo"] + data["BlackElo"]) / 2).astype(np.float32)  # external
     return data
 
 
@@ -35,8 +36,9 @@ def process_result(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_external_features(data: pd.DataFrame) -> pd.DataFrame:
+    # white elo, black elo drop
+
     # data["EloDiffAbs"] = data["EloDiff"].abs().astype(np.int16)
-    # data["MeanElo"] = ((data["WhiteElo"] + data["BlackElo"]) / 2).astype(np.float32)
 
     data["DrawEventProb"] = data.groupby("Event")["Draw"].transform("mean")
     data["WhiteWinEventProb"] = data.groupby("Event")["WhiteWin"].transform("mean")

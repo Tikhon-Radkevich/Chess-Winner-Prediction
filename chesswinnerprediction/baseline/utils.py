@@ -3,14 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import mlflow.sklearn
 from sklearn.utils.class_weight import compute_class_weight
-from sklearn.metrics import (
-    ConfusionMatrixDisplay,
-    classification_report,
-    confusion_matrix,
-    log_loss,
-    balanced_accuracy_score,
-)
+from sklearn import metrics
 
 from chesswinnerprediction.constants import RESULTS_STR_TO_STR, DRAW_STR
 from chesswinnerprediction.baseline.constants import BASELINE_COLUMNS, columns_to_scale
@@ -68,7 +63,7 @@ def print_report(
     report_title_2="Validation Report",
 ):
     predict_1 = model.predict(x1)
-    report_1 = classification_report(y1, predict_1, zero_division=np.nan)
+    report_1 = metrics.classification_report(y1, predict_1, zero_division=np.nan)
 
     print("\n" + " " * 48 + "Classification Report")
     if x2 is None:
@@ -76,7 +71,7 @@ def print_report(
         return
 
     predict_2 = model.predict(x2)
-    report_2 = classification_report(y2, predict_2, zero_division=np.nan)
+    report_2 = metrics.classification_report(y2, predict_2, zero_division=np.nan)
 
     print(" " * 24, report_title_1, " " * 36, report_title_2)
     for part_1, part_2 in zip(report_1.split("\n\n"), report_2.split("\n\n")):
@@ -85,22 +80,22 @@ def print_report(
 
 
 def estimate_baseline_model(
-    model, feature_importance, x_train, y_train, x_test, y_test
+    model, feature_importance, x_train, y_train, x_test, y_test, **kwargs
 ):
     predict = model.predict(x_test)
     prob_predict = model.predict_proba(x_test)
 
-    loss = log_loss(y_test, prob_predict)
+    loss = metrics.log_loss(y_test, prob_predict)
     print(f"Log Loss on test data: {round(loss, 4)}")
 
-    weighted_accuracy = balanced_accuracy_score(y_test, predict)
+    weighted_accuracy = metrics.balanced_accuracy_score(y_test, predict)
     print(f"Balanced Accuracy on test data: {round(weighted_accuracy*100, 2)}%\n")
 
-    print_report(model, x_train, y_train, x_test, y_test)
+    print_report(model, x_train, y_train, x_test, y_test, **kwargs)
 
-    conf_matrix = confusion_matrix(y_test, predict, labels=model.classes_)
+    conf_matrix = metrics.confusion_matrix(y_test, predict, labels=model.classes_, normalize="true")
     labels = [RESULTS_STR_TO_STR[label] for label in model.classes_]
-    ConfusionMatrixDisplay(conf_matrix, display_labels=labels).plot(cmap="Blues")
+    metrics.ConfusionMatrixDisplay(conf_matrix, display_labels=labels).plot(cmap="Blues")
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
     plt.title("Confusion Matrix")
@@ -108,6 +103,8 @@ def estimate_baseline_model(
 
     if feature_importance is not None:
         show_feature_importance(model, feature_importance)
+
+    return weighted_accuracy
 
 
 def get_class_weights(y, verbose=False):
@@ -134,7 +131,8 @@ def get_x_and_y(data, predict_draws=False):
 
 def transform_and_scale_df(df, scaler, fit_scaler=True):
     X = df[BASELINE_COLUMNS].copy()
-    X = pd.get_dummies(X, columns=["Event"], dtype=np.int8, prefix="", prefix_sep="")
+    X["ZeroIncrementTime"] = X["ZeroIncrementTime"].astype(np.float64)
+    X = pd.get_dummies(X, columns=["Event"], dtype=np.bool_, prefix="", prefix_sep="")
     if fit_scaler:
         X[columns_to_scale] = scaler.fit_transform(X[columns_to_scale])
     else:

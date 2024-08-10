@@ -13,6 +13,7 @@ EXAMPLE_URL = f"https://database.lichess.org/standard/{EXAMPLE_NAME}.pgn.zst"
 EXTERNAL_FOLDER_PATH = os.path.join(ROOT_DIR, "data", "external")
 RAW_FOLDER_PATH = os.path.join(ROOT_DIR, "data", "raw")
 PROCESSED_FOLDER_PATH = os.path.join(ROOT_DIR, "data", "processed")
+INTERIM_FOLDER_PATH = os.path.join(ROOT_DIR, "data", "interim")
 
 EXAMPLE_CSV_DIR = os.path.join(RAW_FOLDER_PATH, EXAMPLE_NAME)
 
@@ -39,7 +40,9 @@ RESULTS_INT_TO_STR = {
 RESULTS_STR_TO_STR = {
     WHITE_WIN_STR: "White Win",
     BLACK_WIN_STR: "Black Win",
-    DRAW_STR: "Draw"
+    DRAW_STR: "Draw",
+    False: "Draw",
+    True: "Win"
 }
 
 # Data processing constants

@@ -76,7 +76,7 @@ nbformat==5.10.4
 nest-asyncio==1.6.0
 notebook==7.2.1
 notebook_shim==0.2.4
-numpy==2.0.0
+numpy~=1.26.4
 overrides==7.7.0
 packaging==24.1
 pandas==2.2.2
@@ -137,3 +137,7 @@ webencodings==0.5.1
 websocket-client==1.8.0
 widgetsnbextension==4.0.11
 zstandard==0.23.0
+chesswinnerprediction~=0.0.1
+mlflow~=2.15.1
+optuna
+chess
