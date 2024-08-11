@@ -16,10 +16,14 @@ class Model:
     win_to_draw_splitter_draw_symbol = False
     win_to_draw_splitter_win_symbol = True
 
-    def __init__(self, win_to_draw_splitter, black_to_white_splitter):
+    def __init__(self, win_to_draw_splitter, black_to_white_splitter, name):
         self.win_to_draw_splitter = win_to_draw_splitter
         self.black_to_white_splitter = black_to_white_splitter
+        self.name = name
         self.classes_ = None
+
+    def __repr__(self):
+        return f"{self.win_to_draw_splitter}-{self.black_to_white_splitter}"
 
     def fit(self, x, y):
         # Predict whether the game is a win or a draw
