@@ -22,9 +22,6 @@ class Model:
         self.name = name
         self.classes_ = None
 
-    def __repr__(self):
-        return f"{self.win_to_draw_splitter}-{self.black_to_white_splitter}"
-
     def fit(self, x, y):
         # Predict whether the game is a win or a draw
         win_condition = y != DRAW_STR
