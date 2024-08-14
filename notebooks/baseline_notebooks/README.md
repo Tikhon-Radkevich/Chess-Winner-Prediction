@@ -141,7 +141,7 @@ After tuning, I got at the following configuration:
 
 The model achieved a good recall for predicting draws (0.65), but the balanced accuracy was low at 44.61%.
 
-### Summary
+## Summary
 The idea of predicting the outcome of a game before it starts is viable.  
 For datasets with a low percentage of draws (for example, blitz games with short time controls, like 30 seconds), a `naive model` based on `EloDiff` can achieve around 60% accuracy.  
 However, if predicting draws is also important, `Gradient Boosting` can be used. This approach achieved the best performance, with a **46.93% balanced accuracy score**.
