@@ -15,6 +15,7 @@ This part contains baseline models and their implementations for predicting the 
 - [Decision Tree](#decision-tree)
 - [Ensembles](#ensembles)
 - [Double Stage Model](#double-stage-model)
+- [Summary](#summary)
 
 ## Baseline Structure
 
@@ -95,7 +96,7 @@ The main challenge with knn was class imbalance (only 2% of games are draws).
 I used dataset resampling to oversample draws and undersample black win and white win games.  
 Optuna was used to tune KNN model hyperparameters and number of samples for each class.
 
-KNN achieved a **46% balanced accuracy score**, witch comparable to the logistic regression model.
+KNN achieved a **44.66% balanced accuracy score**, witch comparable to the logistic regression model.
 
 
 ## Decision Tree
@@ -134,8 +135,11 @@ The idea is to predict the winner in two stages:
 - Logistic Regression
 - Custom KNN
 
-Here you can find fit results: [Best Model](/notebooks/baseline_notebooks/double_stage.ipynb#best-model)  
+After tuning, I got at the following configuration:
+- `win_to_draw_splitter_type`: Custom KNN
+- `black_to_white_splitter_type`: Logistic Regression
 
+The model achieved a good recall for predicting draws (0.65), but the balanced accuracy was low at 44.61%.
 
 ### Summary
 The idea of predicting the outcome of a game before it starts is viable.  
