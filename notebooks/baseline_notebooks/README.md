@@ -112,8 +112,8 @@ Notebook: [ensembles.ipynb](/notebooks/baseline_notebooks/ensembles.ipynb)
 This notebook covers both random forest and gradient boosting models.  
 RandomizedSearchCV from sklearn was used to tune hyperparameters.
 
-- **Random Forest**: Achieved **46.6% balanced accuracy score**.
-- **Gradient Boosting**: Achieved **46.93% balanced accuracy score**.
+- **Random Forest**: Achieved **46.38% balanced accuracy score**.
+- **Gradient Boosting**: Achieved **47.0% balanced accuracy score**.
 
 Ensemble models outperformed the decision tree, logistic regression, and KNN models.  
 Gradient Boosting achieved the best performance among all models.
@@ -144,5 +144,5 @@ The model achieved a good recall for predicting draws (0.65), but the balanced a
 ## Summary
 The idea of predicting the outcome of a game before it starts is viable.  
 For datasets with a low percentage of draws (for example, blitz games with short time controls, like 30 seconds), a `naive model` based on `EloDiff` can achieve around 60% accuracy.  
-However, if predicting draws is also important, `Gradient Boosting` can be used. This approach achieved the best performance, with a **46.93% balanced accuracy score**.
+However, if predicting draws is also important, `Gradient Boosting` can be used. This approach achieved the best performance, with a **47.0% balanced accuracy score**.
 
