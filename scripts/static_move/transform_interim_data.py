@@ -3,16 +3,18 @@ import argparse
 
 from chesswinnerprediction.static_move.processing.utils import process_data
 
-from chesswinnerprediction.constants import INTERIM_FOLDER_PATH, EXAMPLE_NAME, STATIC_MOVE
+from chesswinnerprediction.constants import INTERIM_FOLDER_PATH, EXAMPLE_NAME, STATIC_MOVE_DATA_PATH
 
 
 def main(file_path):
-    data = process_data(file_path)
-    data["i_move"] = data.groupby("GameId").cumcount() + 1
+    train, valid, test = process_data(file_path)
 
-    file_name = os.path.basename(file_path)
-    file_path = os.path.join(INTERIM_FOLDER_PATH, STATIC_MOVE, file_name)
-    data.to_csv(file_path, index=False)
+    # file_name = os.path.basename(file_path)
+    data_dir = os.path.join(INTERIM_FOLDER_PATH, STATIC_MOVE_DATA_PATH)
+
+    train.to_csv(os.path.join(str(data_dir), "train.csv"), index=False)
+    valid.to_csv(os.path.join(str(data_dir), "valid.csv"), index=False)
+    test.to_csv(os.path.join(str(data_dir), "test.csv"), index=False)
 
 
 if __name__ == "__main__":
