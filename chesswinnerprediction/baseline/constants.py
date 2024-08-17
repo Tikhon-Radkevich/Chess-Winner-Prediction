@@ -9,7 +9,14 @@ BASELINE_COLUMNS = [
     "Event",
     "BaseTime",
     "IncrementTime",
-    "ZeroIncrementTime"
+    "ZeroIncrementTime",
 ]
 
-columns_to_scale = ["WhiteElo", "BlackElo", "EloDiff", "BaseTime", "IncrementTime", "MeanElo"]
+columns_to_scale = [
+    "WhiteElo",
+    "BlackElo",
+    "EloDiff",
+    "BaseTime",
+    "IncrementTime",
+    "MeanElo",
+]

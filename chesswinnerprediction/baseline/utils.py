@@ -1,17 +1,58 @@
+import os
+
+import mlflow
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-import mlflow.sklearn
 from sklearn.utils.class_weight import compute_class_weight
+from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
 
+from config import PROCESSED_FOLDER_PATH, BASELINE_EXPERIMENT, MLRUNS_FOLDER_PATH
 from chesswinnerprediction.constants import RESULTS_STR_TO_STR, DRAW_STR
-from chesswinnerprediction.baseline.constants import BASELINE_COLUMNS, columns_to_scale
+from chesswinnerprediction.baseline.constants import (
+    BASELINE_COLUMNS,
+    columns_to_scale,
+    BASELINE_RANDOM_STATE,
+)
 
 
-def show_feature_importance(model, feature_importance, grid_y=False):
+def load_train_valid_test(
+    data_dir: str = "lichess_db_standard_rated_2017-05",
+    train_sample_size: float = 0.2,
+    valid_sample_size: float = 0.1,
+    test_sample_size: float = 1.0,
+    random_state: int = BASELINE_RANDOM_STATE,
+) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+    """
+    Returns: X_train, y_train, X_valid, y_valid, X_test, y_test
+    """
+
+    data_path = os.path.join(PROCESSED_FOLDER_PATH, data_dir)
+
+    train_df = pd.read_csv(os.path.join(data_path, "train.csv"))
+    valid_df = pd.read_csv(os.path.join(data_path, "valid.csv"))
+    test_df = pd.read_csv(os.path.join(data_path, "test.csv"))
+
+    train_df = train_df.sample(frac=train_sample_size, random_state=random_state)
+    valid_df = valid_df.sample(frac=valid_sample_size, random_state=random_state)
+    test_df = test_df.sample(frac=test_sample_size, random_state=random_state)
+
+    std_scaler = StandardScaler()
+    train_data = transform_and_scale_df(train_df, std_scaler)
+    valid_data = transform_and_scale_df(valid_df, std_scaler, fit_scaler=False)
+    test_data = transform_and_scale_df(test_df, std_scaler, fit_scaler=False)
+
+    X_train, y_train = get_x_and_y(train_data, predict_draws=True)
+    X_valid, y_valid = get_x_and_y(valid_data, predict_draws=True)
+    X_test, y_test = get_x_and_y(test_data, predict_draws=True)
+
+    return X_train, y_train, X_valid, y_valid, X_test, y_test
+
+
+def show_feature_importance(model, feature_importance, grid_y=False) -> None:
     labels = [RESULTS_STR_TO_STR[label] for label in model.classes_]
     num_classes = len(feature_importance)
     importance_dfs = []
@@ -61,7 +102,7 @@ def print_report(
     y2=None,
     report_title_1="Train Report",
     report_title_2="Validation Report",
-):
+) -> None:
     predict_1 = model.predict(x1)
     report_1 = metrics.classification_report(y1, predict_1, zero_division=np.nan)
 
@@ -81,7 +122,7 @@ def print_report(
 
 def estimate_baseline_model(
     model, feature_importance, x_train, y_train, x_test, y_test, **kwargs
-):
+) -> None:
     predict = model.predict(x_test)
     prob_predict = model.predict_proba(x_test)
 
@@ -89,13 +130,17 @@ def estimate_baseline_model(
     print(f"Log Loss on test data: {round(loss, 4)}")
 
     weighted_accuracy = metrics.balanced_accuracy_score(y_test, predict)
-    print(f"Balanced Accuracy on test data: {round(weighted_accuracy*100, 2)}%\n")
+    print(f"Balanced Accuracy on test data: {round(weighted_accuracy * 100, 2)}%\n")
 
     print_report(model, x_train, y_train, x_test, y_test, **kwargs)
 
-    conf_matrix = metrics.confusion_matrix(y_test, predict, labels=model.classes_, normalize="true")
+    conf_matrix = metrics.confusion_matrix(
+        y_test, predict, labels=model.classes_, normalize="true"
+    )
     labels = [RESULTS_STR_TO_STR[label] for label in model.classes_]
-    metrics.ConfusionMatrixDisplay(conf_matrix, display_labels=labels).plot(cmap="Blues")
+    metrics.ConfusionMatrixDisplay(conf_matrix, display_labels=labels).plot(
+        cmap="Blues"
+    )
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
     plt.title("Confusion Matrix")
@@ -103,8 +148,6 @@ def estimate_baseline_model(
 
     if feature_importance is not None:
         show_feature_importance(model, feature_importance)
-
-    return weighted_accuracy
 
 
 def get_class_weights(y, verbose=False):
@@ -119,7 +162,7 @@ def get_class_weights(y, verbose=False):
     return class_weights
 
 
-def get_x_and_y(data, predict_draws=False):
+def get_x_and_y(data, predict_draws=False) -> tuple[pd.DataFrame, pd.Series]:
     if not predict_draws:
         data = data[data["Result"] != DRAW_STR]
 
@@ -129,10 +172,15 @@ def get_x_and_y(data, predict_draws=False):
     return x_data, y_data
 
 
-def transform_and_scale_df(df, scaler, fit_scaler=True):
+def transform_and_scale_df(
+    df, scaler, fit_scaler=True, dummies_event=True
+) -> pd.DataFrame:
     X = df[BASELINE_COLUMNS].copy()
     X["ZeroIncrementTime"] = X["ZeroIncrementTime"].astype(np.float64)
-    X = pd.get_dummies(X, columns=["Event"], dtype=np.bool_, prefix="", prefix_sep="")
+    if dummies_event:
+        X = pd.get_dummies(
+            X, columns=["Event"], dtype=np.bool_, prefix="", prefix_sep=""
+        )
     if fit_scaler:
         X[columns_to_scale] = scaler.fit_transform(X[columns_to_scale])
     else:
@@ -140,7 +188,7 @@ def transform_and_scale_df(df, scaler, fit_scaler=True):
     return X
 
 
-def get_worst_params_df(cv_results):
+def get_worst_params_df(cv_results) -> pd.DataFrame:
     df_results = pd.DataFrame(cv_results)
     sorted_df = df_results.sort_values(by="mean_test_score")
     param_cols = [col for col in sorted_df.columns if col.startswith("param_")]
@@ -148,3 +196,17 @@ def get_worst_params_df(cv_results):
         sorted_df[param_cols + ["mean_test_score"]].groupby(param_cols).mean()
     )
     return worst_params.sort_values(by="mean_test_score")
+
+
+def setup_mlflow(
+    tracking_uri=MLRUNS_FOLDER_PATH,
+    experiment_name=BASELINE_EXPERIMENT,
+    sklearn_autolog_disable=True,
+    log_post_training_metrics=True,
+) -> None:
+    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_experiment(experiment_name)
+    mlflow.sklearn.autolog(
+        disable=sklearn_autolog_disable,
+        log_post_training_metrics=log_post_training_metrics,
+    )
