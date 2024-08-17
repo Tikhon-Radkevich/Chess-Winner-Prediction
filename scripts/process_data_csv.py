@@ -1,7 +1,11 @@
 import os
 import argparse
 
-from chesswinnerprediction.constants import RAW_FOLDER_PATH, EXAMPLE_CSV_DIR, INTERIM_FOLDER_PATH
+from chesswinnerprediction.constants import (
+    RAW_FOLDER_PATH,
+    EXAMPLE_CSV_DIR,
+    INTERIM_FOLDER_PATH,
+)
 from chesswinnerprediction import process_and_concat_raw_data
 
 

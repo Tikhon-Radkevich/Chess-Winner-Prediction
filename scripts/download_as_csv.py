@@ -23,7 +23,9 @@ def main(url, split_size):
     csv_files_dir_name = file_name.replace(".pgn.zst", "")
     csv_files_dir = os.path.join(RAW_FOLDER_PATH, str(csv_files_dir_name))
     if os.path.exists(csv_files_dir):
-        raise ValueError(f"To process {file_name} again, delete the directory: {csv_files_dir}")
+        raise ValueError(
+            f"To process {file_name} again, delete the directory: {csv_files_dir}"
+        )
 
     os.makedirs(csv_files_dir)
 
@@ -31,7 +33,9 @@ def main(url, split_size):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Download and process chess PGN files.")
+    parser = argparse.ArgumentParser(
+        description="Download and process chess PGN files."
+    )
     parser.add_argument(
         "url",
         nargs="?",

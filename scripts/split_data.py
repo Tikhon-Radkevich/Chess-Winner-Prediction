@@ -73,7 +73,7 @@ if __name__ == "__main__":
         "--valid_size", type=float, default=0.1, help="Valid split size (default: 0.1)"
     )
     parser.add_argument(
-        "--test_size", type=float, default=0.07, help="Test split size(default: 0.15)"
+        "--test_size", type=float, default=0.07, help="Test split size(default: 0.07)"
     )
 
     args = parser.parse_args()
