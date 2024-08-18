@@ -3,11 +3,19 @@ import argparse
 
 from chesswinnerprediction.static_move.processing.utils import process_data
 
-from chesswinnerprediction.constants import INTERIM_FOLDER_PATH, EXAMPLE_NAME, STATIC_MOVE_DATA_PATH
+from chesswinnerprediction.constants import (
+    INTERIM_FOLDER_PATH,
+    EXAMPLE_NAME,
+    STATIC_MOVE_DATA_PATH,
+)
 
 
 def main(file_path):
     train, valid, test = process_data(file_path)
+
+    train = train.sample(frac=1, ).reset_index(drop=True)
+    valid = valid.sample(frac=1, ).reset_index(drop=True)
+    test = test.sample(frac=1, ).reset_index(drop=True)
 
     # file_name = os.path.basename(file_path)
     data_dir = os.path.join(INTERIM_FOLDER_PATH, STATIC_MOVE_DATA_PATH)
