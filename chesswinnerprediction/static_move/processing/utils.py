@@ -1,6 +1,6 @@
 import os
 import warnings
-import ast
+from ast import literal_eval
 
 import pandas as pd
 import numpy as np
@@ -41,18 +41,14 @@ def assign_times(group):
     group["white_remaining_time"] = group["times_in_second"].where(group.index % 2 == 0)
     group["black_remaining_time"] = group["times_in_second"].where(group.index % 2 == 1)
 
-    group.loc[0, "black_remaining_time"] = group.loc[0, "black_remaining_time"]
+    group.loc[0, "black_remaining_time"] = group.loc[0, "white_remaining_time"]
     return group[["white_remaining_time", "black_remaining_time"]]
 
 
-def transform_data(data):
-    data["GameDurations"] = data["GameDurations"].apply(lambda x: ast.literal_eval(x))
-    data["evaluations_list"] = data["evaluations_list"].apply(
-        lambda x: ast.literal_eval(x)
-    )
-    data["times_in_second"] = data["times_in_second"].apply(
-        lambda x: ast.literal_eval(x)
-    )
+def transform_data(data, file_path):
+    data["GameDurations"] = data["GameDurations"].apply(literal_eval)
+    data["evaluations_list"] = data["evaluations_list"].apply(literal_eval)
+    data["times_in_second"] = data["times_in_second"].apply(literal_eval)
 
     data = data.explode(
         ["evaluations_list", "times_in_second", "GameDurations"]
@@ -61,7 +57,6 @@ def transform_data(data):
     data["i_move"] = data.groupby("GameId").cumcount() + 1
 
     data["is_checkmate_countdown"] = data["evaluations_list"].str.startswith("#")
-
     data["eval"] = data["evaluations_list"].str.replace("#", "").astype(np.float64)
     data["GameDurations"] = data["GameDurations"].astype(np.float64)
     data["times_in_second"] = data["times_in_second"].astype(np.float64)
@@ -75,15 +70,23 @@ def transform_data(data):
 
     data = pd.merge(data, times_df, on=["GameId", "i_move"])
 
-    data["white_remaining_time"] = data["white_remaining_time"].ffill()
-    data["black_remaining_time"] = data["black_remaining_time"].ffill()
+    data[["white_remaining_time", "black_remaining_time"]] = (
+        data[["white_remaining_time", "black_remaining_time"]].ffill()
+    )
 
     data["time_diff"] = data["white_remaining_time"] - data["black_remaining_time"]
-    data["white_remaining_time_norm"] = data["white_remaining_time"] / data["mean_base_time"]
-    data["black_remaining_time_norm"] = data["black_remaining_time"] / data["mean_base_time"]
+    norm_columns = ["time_diff", "white_remaining_time", "black_remaining_time", "GameDurations"]
+    new_columns = ["time_norm_diff", "white_remaining_time_norm", "black_remaining_time_norm", "GameDurations"]
+
+    data[new_columns] = data[norm_columns].div(data["BaseTime"], axis=0)
+
+    # data["white_remaining_time_norm"] = data["white_remaining_time"] / data["BaseTime"]
+    # data["black_remaining_time_norm"] = data["black_remaining_time"] / data["BaseTime"]
+    # data["time_norm_diff"] = data["white_remaining_time_norm"] - data["black_remaining_time_norm"]
+    # data["GameDurations"] /= data["BaseTime"]
 
     data = data[STATIC_MOVE_COLUMNS]
-    return data
+    data.to_csv(file_path, index=False)
 
 
 def compute_sample_weights(data, threshold):
@@ -96,59 +99,59 @@ def compute_sample_weights(data, threshold):
     return weights
 
 
-def process_data(
-    data_path,
-    n_draw_games=24000,
-    n_valid_games=3000,
-    n_test_games=3000,
-    n_train_draw=30000,
-    n_valid_draws=10000,
-    n_test_draw=10000,
-):
-    threshold = 120
-    random_state = 42
-    np.random.seed(random_state)
-
-    data = pd.read_csv(data_path)
-    data["GameId"] = data.index
-
-    # todo move 'mean_base_time' to scripts/process_data_csv.py
-    data["mean_base_time"] = data.groupby("Event")["BaseTime"].transform("mean")
-
-    data = sample_data(data, n_draw_games, random_state)
-    game_ids = data["GameId"].copy().values
-    np.random.shuffle(game_ids)
-
-    train_split_idx = len(game_ids) - n_valid_games - n_test_games
-    valid_split_idx = len(game_ids) - n_test_games
-    train_ids, valid_ids, test_ids = np.split(
-        game_ids, indices_or_sections=[train_split_idx, valid_split_idx]
-    )
-
-    train_data = transform_data(data[data["GameId"].isin(train_ids)].copy())
-    valid_data = transform_data(data[data["GameId"].isin(valid_ids)].copy())
-    test_data = transform_data(data[data["GameId"].isin(test_ids)].copy())
-
-    train_data = sample_data(
-        train_data,
-        n_train_draw,
-        random_state,
-        compute_sample_weights(train_data, threshold),
-    )
-    valid_data = sample_data(
-        valid_data,
-        n_valid_draws,
-        random_state,
-        compute_sample_weights(valid_data, threshold),
-    )
-    test_data = sample_data(
-        test_data,
-        n_test_draw,
-        random_state,
-        compute_sample_weights(test_data, threshold),
-    )
-
-    return train_data, valid_data, test_data
+# def process_data(
+#     data_path,
+#     n_draw_games=24000,
+#     n_valid_games=3000,
+#     n_test_games=3000,
+#     n_train_draw=30000,
+#     n_valid_draws=10000,
+#     n_test_draw=10000,
+# ):
+#     threshold = 120
+#     random_state = 42
+#     np.random.seed(random_state)
+#
+#     data = pd.read_csv(data_path)
+#     data["GameId"] = data.index
+#
+#     # todo move 'mean_base_time' to scripts/process_data_csv.py
+#     data["mean_base_time"] = data.groupby("Event")["BaseTime"].transform("mean")
+#
+#     data = sample_data(data, n_draw_games, random_state)
+#     game_ids = data["GameId"].copy().values
+#     np.random.shuffle(game_ids)
+#
+#     train_split_idx = len(game_ids) - n_valid_games - n_test_games
+#     valid_split_idx = len(game_ids) - n_test_games
+#     train_ids, valid_ids, test_ids = np.split(
+#         game_ids, indices_or_sections=[train_split_idx, valid_split_idx]
+#     )
+#
+#     train_data = transform_data(data[data["GameId"].isin(train_ids)].copy())
+#     valid_data = transform_data(data[data["GameId"].isin(valid_ids)].copy())
+#     test_data = transform_data(data[data["GameId"].isin(test_ids)].copy())
+#
+#     train_data = sample_data(
+#         train_data,
+#         n_train_draw,
+#         random_state,
+#         compute_sample_weights(train_data, threshold),
+#     )
+#     valid_data = sample_data(
+#         valid_data,
+#         n_valid_draws,
+#         random_state,
+#         compute_sample_weights(valid_data, threshold),
+#     )
+#     test_data = sample_data(
+#         test_data,
+#         n_test_draw,
+#         random_state,
+#         compute_sample_weights(test_data, threshold),
+#     )
+#
+#     return train_data, valid_data, test_data
 
 
 def sample_games(data, n, random_state, balanced=False):
@@ -218,9 +221,22 @@ def explode_data(
     balanced_valid_data = balanced_valid_data.sample(frac=1).reset_index(drop=True)
 
     # save
-    test_data.to_csv(os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "test.csv"), index=False)
-    original_train_data.to_csv(os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "train.csv"), index=False)
-    original_valid_data.to_csv(os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "valid.csv"), index=False)
+    print("Saving test")
+    test_data_path = os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "test.csv")
+    transform_data(test_data, test_data_path)
 
-    balanced_train_data.to_csv(os.path.join(INTERIM_STATIC_MOVE_SPLIT_BALANCED, "train.csv"), index=False)
-    balanced_valid_data.to_csv(os.path.join(INTERIM_STATIC_MOVE_SPLIT_BALANCED, "valid.csv"), index=False)
+    print("Saving original train")
+    original_train_data_path = os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "train.csv")
+    transform_data(original_train_data, original_train_data_path)
+
+    print("Saving original valid")
+    original_valid_data_path = os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "valid.csv")
+    transform_data(original_valid_data, original_valid_data_path)
+
+    print("Saving balanced train")
+    balanced_train_data_path = os.path.join(INTERIM_STATIC_MOVE_SPLIT_BALANCED, "train.csv")
+    transform_data(balanced_train_data, balanced_train_data_path)
+
+    print("Saving balanced valid")
+    balanced_valid_data_path = os.path.join(INTERIM_STATIC_MOVE_SPLIT_BALANCED, "valid.csv")
+    transform_data(balanced_valid_data, balanced_valid_data_path)

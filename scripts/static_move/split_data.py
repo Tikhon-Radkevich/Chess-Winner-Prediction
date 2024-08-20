@@ -9,7 +9,7 @@ from chesswinnerprediction.constants import (
     EXAMPLE_NAME,
     GAME_ID,
     INTERIM_FOLDER_PATH,
-    STATIC_MOVE
+    STATIC_MOVE,
 )
 
 
@@ -38,7 +38,9 @@ def split_csv(file_path, train_size, valid_size, test_size, random_state):
     )
 
     games = df[GAME_ID].unique()
-    valid_test_games = np.random.choice(games, int(len(games) * (valid_size + test_size)), replace=False)
+    valid_test_games = np.random.choice(
+        games, int(len(games) * (valid_size + test_size)), replace=False
+    )
     split_idx = int(len(valid_test_games) * valid_size / (valid_size + test_size))
     valid_games, test_games = np.split(valid_test_games, [split_idx])
 
