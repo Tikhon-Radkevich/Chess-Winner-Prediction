@@ -1,13 +1,27 @@
+import os
+import warnings
 import ast
 
 import pandas as pd
 import numpy as np
 
 from chesswinnerprediction.static_move.constants import STATIC_MOVE_COLUMNS
-from chesswinnerprediction.constants import DRAW_STR, WHITE_WIN_STR, BLACK_WIN_STR
+from chesswinnerprediction.constants import DRAW_STR, WHITE_WIN_STR, BLACK_WIN_STR, INTERIM_STATIC_MOVE_SPLIT_BALANCED, INTERIM_STATIC_MOVE_SPLIT_ORIGINAL
 
 
-def sample_data(data, n, random_state, weights=None):
+def sample_data(data, random_state, n=None, weights=None):
+    if n is None:
+        n = (data["Result"] == DRAW_STR).sum()
+    else:
+        n //= 3
+        n_min = (data["Result"] == DRAW_STR).sum()
+        if n > n_min:
+            warnings.warn(
+                f"Number of samples {n // 3} is bigger than number of draws. "
+                f"Number of samples will be: {n_min * 3}."
+            )
+            n = n_min
+
     draws = data[data["Result"] == DRAW_STR].sample(
         n=n, random_state=random_state, weights=weights
     )
@@ -135,3 +149,78 @@ def process_data(
     )
 
     return train_data, valid_data, test_data
+
+
+def sample_games(data, n, random_state, balanced=False):
+    if balanced:
+        n //= 3
+        draws = data[data["Result"] == DRAW_STR].sample(n=n, random_state=random_state)
+        black_wins = data[data["Result"] == BLACK_WIN_STR].sample(n=n, random_state=random_state)
+        white_wins = data[data["Result"] == WHITE_WIN_STR].sample(n=n, random_state=random_state)
+        games = pd.concat([draws, white_wins, black_wins]).reset_index(drop=True)
+    else:
+        games = data.sample(n=n, random_state=random_state)
+    return games
+
+
+def get_not_balanced_train_valid(used_ids, data, random_state):
+    train_data = data[~data["GameId"].isin(used_ids)].sample(n=66000, random_state=random_state)
+    used_ids = pd.concat([used_ids, train_data["GameId"]])
+
+    valid_data = data[~data["GameId"].isin(used_ids)].sample(n=9000, random_state=random_state)
+    return train_data, valid_data
+
+
+def get_balanced_train_valid(used_ids, data, random_state):
+    train_data = sample_data(data[~data["GameId"].isin(used_ids)], random_state, n=66000)
+
+    warnings.warn("Balanced Valid set will take values from the balanced train set.")
+    valid_data = sample_data(train_data, random_state, n=9000)
+    train_data = train_data[~train_data["GameId"].isin(valid_data["GameId"])]
+    return train_data, valid_data
+
+
+def explode_data(
+    interim_df: pd.DataFrame,
+    # balanced_train=False,
+    # balance_valid=False,
+):
+    """
+    Test set will be the same distribution as the original data.
+    It will be split first. Other sets will be sampled from the remaining data.
+
+    For valid and train sets there are 2 scenarios:
+    1) balance_train is False && balance_valid is False:
+        - train set will be sampled from the remaining data after test set is split.
+        - valid set will be sampled from the remaining data after test and train sets are split.
+
+    2) balance_train is True && balance_valid is True:
+        - balanced train set will be sampled from the remaining data after test set is split.
+        - valid set will be sampled from the balanced train set.
+            Train set will be resampled according to the valid set size.
+
+    """
+    random_state = 42
+    np.random.seed(random_state)
+
+    data = interim_df.copy()
+
+    data["GameId"] = data.index
+
+    test_data = data.sample(n=10000, random_state=random_state)
+    used_ids = test_data["GameId"]
+
+    original_train_data, original_valid_data = get_not_balanced_train_valid(used_ids, data, random_state)
+    used_ids = pd.concat([used_ids, original_train_data["GameId"], original_valid_data["GameId"]])
+
+    balanced_train_data, balanced_valid_data = get_balanced_train_valid(used_ids, data, random_state)
+    balanced_train_data = balanced_train_data.sample(frac=1).reset_index(drop=True)
+    balanced_valid_data = balanced_valid_data.sample(frac=1).reset_index(drop=True)
+
+    # save
+    test_data.to_csv(os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "test.csv"), index=False)
+    original_train_data.to_csv(os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "train.csv"), index=False)
+    original_valid_data.to_csv(os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "valid.csv"), index=False)
+
+    balanced_train_data.to_csv(os.path.join(INTERIM_STATIC_MOVE_SPLIT_BALANCED, "train.csv"), index=False)
+    balanced_valid_data.to_csv(os.path.join(INTERIM_STATIC_MOVE_SPLIT_BALANCED, "valid.csv"), index=False)

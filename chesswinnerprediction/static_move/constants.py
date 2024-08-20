@@ -1,4 +1,3 @@
-
 RANDOM_STATE = 42
 
 
@@ -14,8 +13,12 @@ STATIC_MOVE_COLUMNS = [
     "BaseTime",
     "IncrementTime",
     "ZeroIncrementTime",
-    "white_left_time",
-    "black_left_time",
+    "white_remaining_time",
+    "black_remaining_time",
+    "mean_base_time",
+    "time_diff",
+    "white_remaining_time_norm",
+    "black_remaining_time_norm",
     "GameDurations",
     "is_checkmate_countdown",
     "i_move",
