@@ -6,7 +6,8 @@ import pandas as pd
 import numpy as np
 
 from chesswinnerprediction.static_move.constants import STATIC_MOVE_COLUMNS
-from chesswinnerprediction.constants import DRAW_STR, WHITE_WIN_STR, BLACK_WIN_STR, INTERIM_STATIC_MOVE_SPLIT_BALANCED, INTERIM_STATIC_MOVE_SPLIT_ORIGINAL
+from chesswinnerprediction.constants import DRAW_STR, WHITE_WIN_STR, BLACK_WIN_STR, INTERIM_STATIC_MOVE_SPLIT_BALANCED, \
+    INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, INTERIM_STATIC_MOVE_SPLIT_EXTRA
 
 
 def sample_data(data, random_state, n=None, weights=None):
@@ -45,7 +46,7 @@ def assign_times(group):
     return group[["white_remaining_time", "black_remaining_time"]]
 
 
-def transform_data(data, file_path):
+def transform_data(data):
     data["GameDurations"] = data["GameDurations"].apply(literal_eval)
     data["evaluations_list"] = data["evaluations_list"].apply(literal_eval)
     data["times_in_second"] = data["times_in_second"].apply(literal_eval)
@@ -79,14 +80,15 @@ def transform_data(data, file_path):
     new_columns = ["time_norm_diff", "white_remaining_time_norm", "black_remaining_time_norm", "GameDurations"]
 
     data[new_columns] = data[norm_columns].div(data["BaseTime"], axis=0)
-
-    # data["white_remaining_time_norm"] = data["white_remaining_time"] / data["BaseTime"]
-    # data["black_remaining_time_norm"] = data["black_remaining_time"] / data["BaseTime"]
-    # data["time_norm_diff"] = data["white_remaining_time_norm"] - data["black_remaining_time_norm"]
-    # data["GameDurations"] /= data["BaseTime"]
-
+    #
+    data["white_remaining_time_norm"] = data["white_remaining_time"] / data["BaseTime"]
+    data["black_remaining_time_norm"] = data["black_remaining_time"] / data["BaseTime"]
+    data["time_norm_diff"] = data["white_remaining_time_norm"] - data["black_remaining_time_norm"]
+    data["GameDurations"] /= data["BaseTime"]
+    #
     data = data[STATIC_MOVE_COLUMNS]
-    data.to_csv(file_path, index=False)
+    # data = data[["GameId", "i_move", "Result", "times_in_second"]]
+    return data
 
 
 def compute_sample_weights(data, threshold):
@@ -154,39 +156,63 @@ def compute_sample_weights(data, threshold):
 #     return train_data, valid_data, test_data
 
 
-def sample_games(data, n, random_state, balanced=False):
-    if balanced:
-        n //= 3
-        draws = data[data["Result"] == DRAW_STR].sample(n=n, random_state=random_state)
-        black_wins = data[data["Result"] == BLACK_WIN_STR].sample(n=n, random_state=random_state)
-        white_wins = data[data["Result"] == WHITE_WIN_STR].sample(n=n, random_state=random_state)
-        games = pd.concat([draws, white_wins, black_wins]).reset_index(drop=True)
-    else:
-        games = data.sample(n=n, random_state=random_state)
-    return games
+# def sample_games(data, n, random_state, balanced=False):
+#     if balanced:
+#         n //= 3
+#         draws = data[data["Result"] == DRAW_STR].sample(n=n, random_state=random_state)
+#         black_wins = data[data["Result"] == BLACK_WIN_STR].sample(n=n, random_state=random_state)
+#         white_wins = data[data["Result"] == WHITE_WIN_STR].sample(n=n, random_state=random_state)
+#         games = pd.concat([draws, white_wins, black_wins]).reset_index(drop=True)
+#     else:
+#         games = data.sample(n=n, random_state=random_state)
+#     return games
 
 
-def get_not_balanced_train_valid(used_ids, data, random_state):
-    train_data = data[~data["GameId"].isin(used_ids)].sample(n=66000, random_state=random_state)
-    used_ids = pd.concat([used_ids, train_data["GameId"]])
+def get_test_train_valid_game_ids(data, random_state, n_test, n_train, n_valid):
+    test_ids = data.sample(n=n_test, random_state=random_state)["GameId"]
+    used_ids = test_ids
 
-    valid_data = data[~data["GameId"].isin(used_ids)].sample(n=9000, random_state=random_state)
-    return train_data, valid_data
+    train_ids = data[~data["GameId"].isin(used_ids)].sample(n=n_train, random_state=random_state)["GameId"]
+    used_ids = pd.concat([used_ids, train_ids])
+
+    valid_ids = data[~data["GameId"].isin(used_ids)].sample(n=n_valid, random_state=random_state)["GameId"]
+    return test_ids, train_ids, valid_ids
 
 
-def get_balanced_train_valid(used_ids, data, random_state):
-    train_data = sample_data(data[~data["GameId"].isin(used_ids)], random_state, n=66000)
+def get_balanced_train_valid(used_ids, data, random_state, n_train, n_valid):
+    train_data = sample_data(data[~data["GameId"].isin(used_ids)], random_state, n=n_train)
 
     warnings.warn("Balanced Valid set will take values from the balanced train set.")
-    valid_data = sample_data(train_data, random_state, n=9000)
+    valid_data = sample_data(train_data, random_state, n=n_valid)
     train_data = train_data[~train_data["GameId"].isin(valid_data["GameId"])]
     return train_data, valid_data
 
 
+# def i_move_balance
+
+def get_extra(used_ids, data, random_state, n_draws, n_wins):
+    draw_condition = ((data["Result"] == DRAW_STR) & ~(data["GameId"].isin(used_ids)))
+    extra_black_condition = ((data["Result"] == BLACK_WIN_STR) & ~(data["GameId"].isin(used_ids)))
+    extra_white_condition = ((data["Result"] == WHITE_WIN_STR) & ~(data["GameId"].isin(used_ids)))
+
+    # class balanced dataset:
+    # draws_balance = data[draw_condition].sample(n=n_draws, random_state=random_state)["GameId"]
+    # black_win_balance = data[extra_black_condition].sample(n=n_draws, random_state=random_state)["GameId"]
+    # white_win_balance = data[extra_white_condition].sample(n=n_draws, random_state=random_state)["GameId"]
+    # balance_data = pd.concat([draws_balance, black_win_balance, white_win_balance]).reset_index(drop=True)
+
+    draw_data = data[draw_condition].sample(n=n_draws, random_state=random_state)["GameId"]
+    extra_white_win_data = data[extra_black_condition].sample(n=n_wins, random_state=random_state)["GameId"]
+    extra_black_win_data = data[extra_white_condition].sample(n=n_wins, random_state=random_state)["GameId"]
+    extra_data = pd.concat([draw_data, extra_white_win_data, extra_black_win_data]).reset_index(drop=True)
+
+    return extra_data
+
+
 def explode_data(
-    interim_df: pd.DataFrame,
-    # balanced_train=False,
-    # balance_valid=False,
+        interim_df: pd.DataFrame,
+        # balanced_train=False,
+        # balance_valid=False,
 ):
     """
     Test set will be the same distribution as the original data.
@@ -206,37 +232,30 @@ def explode_data(
     random_state = 42
     np.random.seed(random_state)
 
-    data = interim_df.copy()
+    data = interim_df
 
     data["GameId"] = data.index
 
-    test_data = data.sample(n=10000, random_state=random_state)
-    used_ids = test_data["GameId"]
+    test_ids = data.sample(n=10000, random_state=random_state)["GameId"]
+    used_ids = test_ids
 
-    original_train_data, original_valid_data = get_not_balanced_train_valid(used_ids, data, random_state)
-    used_ids = pd.concat([used_ids, original_train_data["GameId"], original_valid_data["GameId"]])
+    n_test, n_train, n_valid = 10_000, 80_000, 10_000
+    test_ids, train_ids, valid_ids = get_test_train_valid_game_ids(data, random_state, n_test, n_train, n_valid)
 
-    balanced_train_data, balanced_valid_data = get_balanced_train_valid(used_ids, data, random_state)
-    balanced_train_data = balanced_train_data.sample(frac=1).reset_index(drop=True)
-    balanced_valid_data = balanced_valid_data.sample(frac=1).reset_index(drop=True)
+    combined = pd.concat([test_ids, train_ids, valid_ids])
+
+    transformed_data = transform_data(data[data["GameId"].isin(combined)].copy())
 
     # save
     print("Saving test")
     test_data_path = os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "test.csv")
-    transform_data(test_data, test_data_path)
+    transformed_data[transformed_data["GameId"].isin(test_ids)].to_csv(test_data_path, index=False)
 
     print("Saving original train")
     original_train_data_path = os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "train.csv")
-    transform_data(original_train_data, original_train_data_path)
+    transformed_data[transformed_data["GameId"].isin(train_ids)].to_csv(original_train_data_path, index=False)
 
     print("Saving original valid")
     original_valid_data_path = os.path.join(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL, "valid.csv")
-    transform_data(original_valid_data, original_valid_data_path)
+    transformed_data[transformed_data["GameId"].isin(valid_ids)].to_csv(original_valid_data_path, index=False)
 
-    print("Saving balanced train")
-    balanced_train_data_path = os.path.join(INTERIM_STATIC_MOVE_SPLIT_BALANCED, "train.csv")
-    transform_data(balanced_train_data, balanced_train_data_path)
-
-    print("Saving balanced valid")
-    balanced_valid_data_path = os.path.join(INTERIM_STATIC_MOVE_SPLIT_BALANCED, "valid.csv")
-    transform_data(balanced_valid_data, balanced_valid_data_path)
