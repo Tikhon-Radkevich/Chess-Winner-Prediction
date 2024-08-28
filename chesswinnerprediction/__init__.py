@@ -1,5 +1,11 @@
-from chesswinnerprediction.dataloader.download_pgn_zst import download_file as download_pgn_zst_file
+from chesswinnerprediction.dataloader.download_pgn_zst import (
+    download_file as download_pgn_zst_file,
+)
 from chesswinnerprediction.dataloader.pgn_zst_to_csv import pgn_zst_to_dataframe
-from chesswinnerprediction.processing.process_and_concat_raw_data import process_and_concat_raw_data
-from chesswinnerprediction.visualization.visualization import plot_pie, plot_draw_percentage_by_base_time
-
+from chesswinnerprediction.processing.process_and_concat_raw_data import (
+    process_and_concat_raw_data,
+)
+from chesswinnerprediction.visualization.visualization import (
+    plot_pie,
+    plot_draw_percentage_by_base_time,
+)
