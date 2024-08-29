@@ -80,7 +80,7 @@ class CustomKNNClassifier(BaseEstimator, ClassifierMixin):
             Returns the instance of the CustomKNNClassifier.
         """
         if self.class_weight is not None:
-            x, y = self.balance_dataset(X, y)
+            X, y = self.balance_dataset(X, y)
 
         self.knn.fit(X, y)
         self.classes_ = self.knn.classes_

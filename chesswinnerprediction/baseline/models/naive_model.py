@@ -44,6 +44,13 @@ class NaiveModel:
         y_predict = self.predict(x)
         return metrics.balanced_accuracy_score(y, y_predict)
 
+    def log_loss(self, x: pd.DataFrame, y: pd.Series) -> float:
+        if not self.predict_draws:
+            x, y = x[y != DRAW_STR], y[y != DRAW_STR]
+
+        proba = self.predict_proba(x)
+        return metrics.log_loss(y, proba)
+
     def mlflow_log(self, x: pd.DataFrame, y: pd.Series) -> None:
         mlflow.set_tag("estimator_name", "NaiveModel")
         mlflow.log_param("input_data", x)
