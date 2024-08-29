@@ -7,8 +7,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from sklearn.utils.class_weight import compute_class_weight
+from sklearn.calibration import CalibrationDisplay, calibration_curve
 from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
+
+from IPython.display import display, HTML
 
 from config import PROCESSED_FOLDER_PATH, BASELINE_EXPERIMENT, MLRUNS_FOLDER_PATH
 from chesswinnerprediction.constants import RESULTS_STR_TO_STR, DRAW_STR
@@ -120,6 +123,87 @@ def print_report(
             print(val_1, " " * 6 + val_2[12:])
 
 
+def plot_confusion_matrix(model, predict, y_test) -> None:
+    conf_matrix = metrics.confusion_matrix(
+        y_test, predict, labels=model.classes_, normalize="true"
+    )
+    labels = [RESULTS_STR_TO_STR[label] for label in model.classes_]
+    metrics.ConfusionMatrixDisplay(conf_matrix, display_labels=labels).plot(
+        cmap="Blues"
+    )
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title("Confusion Matrix")
+    plt.show()
+
+
+def plot_calibration_curve(model, prob_predict, y_test: pd.Series) -> None:
+    n_bins = 10
+    bin_edges = np.linspace(0.0, 1.0, n_bins + 1)
+
+    n_classes = len(model.classes_)
+
+    fig, axes = plt.subplots(1, n_classes, figsize=(5 * n_classes, 5), sharey=True)
+    colors = plt.get_cmap("tab10")
+
+    for i, class_label in enumerate(model.classes_):
+        ax = axes[i]
+
+        class_index = i
+        CalibrationDisplay.from_predictions(
+            y_test == class_label,
+            prob_predict[:, class_index],
+            n_bins=n_bins,
+            name=f"{class_label}",
+            ax=ax,
+            strategy="uniform",
+            color=colors(i)
+        )
+
+        bin_counts = np.zeros((n_bins, n_classes))
+        bin_indices = np.searchsorted(bin_edges[1:-1], prob_predict[:, i])
+
+        for bin_i in range(n_bins):
+            for j in range(n_classes):
+                bin_counts[bin_i, j] = np.sum(bin_indices[y_test == model.classes_[j]] == bin_i)
+
+        ax2 = ax.twinx()
+        bottom = np.zeros(n_bins)
+        bar_width = bin_edges[1] - bin_edges[0]
+
+        for j in range(n_classes):
+            ax2.bar(
+                bin_edges[:-1] + bar_width / 2,
+                bin_counts[:, j],
+                width=bar_width,
+                bottom=bottom,
+                alpha=0.1,
+                edgecolor="black",
+                color=colors(j),
+                label=f'{model.classes_[j]}'
+            )
+            bottom += bin_counts[:, j]
+
+        ax.legend(loc="upper right")
+        ax.set_ylabel("")
+        ax2.set_ylabel("")
+        ax.set_xlabel("Mean Predicted Probability")
+        ax.set_title(class_label)
+
+        if i == 0:
+            ax.set_ylabel("Fraction of Positives")
+        elif i == n_classes - 1:
+            ax2.set_ylabel("Number of Samples")
+
+    plt.suptitle("Calibration Curves and Sample Distributions")
+    plt.tight_layout()
+    plt.show()
+
+
+def compute_brier_score_loss(prob_predict, y_test) -> float:
+    return metrics.brier_score_loss(y_test, prob_predict)
+
+
 def estimate_baseline_model(
     model, feature_importance, x_train, y_train, x_test, y_test, **kwargs
 ) -> None:
@@ -134,17 +218,9 @@ def estimate_baseline_model(
 
     print_report(model, x_train, y_train, x_test, y_test, **kwargs)
 
-    conf_matrix = metrics.confusion_matrix(
-        y_test, predict, labels=model.classes_, normalize="true"
-    )
-    labels = [RESULTS_STR_TO_STR[label] for label in model.classes_]
-    metrics.ConfusionMatrixDisplay(conf_matrix, display_labels=labels).plot(
-        cmap="Blues"
-    )
-    plt.xlabel("Predicted")
-    plt.ylabel("Actual")
-    plt.title("Confusion Matrix")
-    plt.show()
+    plot_confusion_matrix(model, predict, y_test)
+
+    plot_calibration_curve(model, prob_predict, y_test)
 
     if feature_importance is not None:
         show_feature_importance(model, feature_importance)

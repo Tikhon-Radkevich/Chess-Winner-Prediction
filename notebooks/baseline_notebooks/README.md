@@ -1,6 +1,6 @@
 # Chess Winner Prediction Baselines
 
-![log](/imgs/baseline_log_10.jpg)  
+![Chess Winner Prediction Baselines](/imgs/baseline_log_10.jpg)  
 
 This part contains baseline models and their implementations for predicting the winner of chess games based on player ratings and game details.
 
@@ -75,7 +75,12 @@ This model predicts the winner based on the Elo difference between players. The 
 
 **Naive Solution Accuracy**:
 - Excluding draw games, the model achieves **60.09% accuracy** when predicting wins based on EloDiff.
-- When including draws and using `balanced_accuracy_score`, the model achieves **40.06% accuracy**.
+- When including draws and using `balanced_accuracy_score`, the model achieves **40.06% accuracy**.  
+- Log Loss (excluding draws): 21.6621
+- Log Loss (including draws): 22.0451
+
+The naive solution assigns a probability of 100% to the player with the higher Elo. 
+This approach leads to a high log loss, as the model is overly confident and does not account for instances where the prediction is incorrect.
 
 
 ### Logistic Regression
@@ -86,7 +91,17 @@ The key feature for predicting the winner is `EloDiff`.
 
 - **No draws prediction**: Achieves similar results to the naive model, with approximately **60% accuracy**.
 - **Including draws**: A multinomial multiclass solution was used (scikit-learn==1.5.1), achieving a **46.6% balanced accuracy score**.
+- **Log Loss (including draws)**: 1.0381
 
+![Logistic Regression Calibration Curve](/imgs/logistic_regression_calibration_curve.jpg)
+
+Even with such a simple approach the results are quite reasonable. 
+The calibration curves for predicting white and black wins are relatively balanced. 
+The slight upward shift from the perfect calibration line may be due to the probability 
+mass being distributed to draws, leading to a mean predicted probability around 0.3 instead of 0.5.  
+Regarding draws,the calibration curve shows that the model struggles with the imbalance in class distribution. 
+The model does a decent job of identifying draws, with a recall of 0.57, but the precision is very low at 0.05.  
+See the [notebook](/notebooks/baseline_notebooks/logistic_regression.ipynb) for more details.
 
 ## KNN
 Notebook: [knn.ipynb](/notebooks/baseline_notebooks/knn.ipynb)  
@@ -96,14 +111,16 @@ The main challenge with knn was class imbalance (only 2% of games are draws).
 I used dataset resampling to oversample draws and undersample black win and white win games.  
 Optuna was used to tune KNN model hyperparameters and number of samples for each class.
 
-KNN achieved a **44.66% balanced accuracy score**, witch comparable to the logistic regression model.
+KNN achieved a **44.42% balanced accuracy score**, witch comparable to the logistic regression model.   
+KNN got quite good **log loss**: 1.1021
 
 
 ## Decision Tree
 Notebook: [decision_tree.ipynb](/notebooks/baseline_notebooks/decision_tree.ipynb)
 
 RandomizedSearchCV from sklearn was used to achieve better performance.  
-The best model got a **44.63% balanced accuracy score**.
+The best model got a **45.21% balanced accuracy score**.  
+And the **log loss**: 1.031
 
 
 ## Ensembles
@@ -112,8 +129,8 @@ Notebook: [ensembles.ipynb](/notebooks/baseline_notebooks/ensembles.ipynb)
 This notebook covers both random forest and gradient boosting models.  
 RandomizedSearchCV from sklearn was used to tune hyperparameters.
 
-- **Random Forest**: Achieved **46.38% balanced accuracy score**.
-- **Gradient Boosting**: Achieved **47.0% balanced accuracy score**.
+- **Random Forest**: Achieved **46.38% balanced accuracy score** and **1.0364 log loss**.
+- **Gradient Boosting**: Achieved **47.0% balanced accuracy score** and **1.0273 log loss**.
 
 Ensemble models outperformed the decision tree, logistic regression, and KNN models.  
 Gradient Boosting achieved the best performance among all models.
@@ -140,6 +157,7 @@ After tuning, I got at the following configuration:
 - `black_to_white_splitter_type`: Logistic Regression
 
 The model achieved a good recall for predicting draws (0.65), but the balanced accuracy was low at 44.61%.
+Log loss is 1.1615.
 
 ## Summary
 The idea of predicting the outcome of a game before it starts is viable.  
