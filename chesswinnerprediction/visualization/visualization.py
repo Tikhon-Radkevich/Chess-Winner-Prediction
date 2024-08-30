@@ -26,9 +26,13 @@ def plot_draw_percentage_by_base_time(data_df, base_times=None):
     elif isinstance(base_times, int):
         base_time_counts = data_df["BaseTime"].value_counts()
         top_base_times = base_time_counts.head(base_times).index
-        base_time_df = data_df[data_df["BaseTime"].isin(top_base_times)][["BaseTime", "Draw"]]
+        base_time_df = data_df[data_df["BaseTime"].isin(top_base_times)][
+            ["BaseTime", "Draw"]
+        ]
     else:
-        base_time_df = data_df[data_df["BaseTime"].isin(base_times)][["BaseTime", "Draw"]]
+        base_time_df = data_df[data_df["BaseTime"].isin(base_times)][
+            ["BaseTime", "Draw"]
+        ]
 
     pct_draw_values = base_time_df.groupby("BaseTime").mean() * 100
 
@@ -39,8 +43,6 @@ def plot_draw_percentage_by_base_time(data_df, base_times=None):
     plot_ax.set_xlabel("Base Time")
     plt.xticks(rotation=45)
     plt.show()
-
-
 
 
 # TODO: remove
@@ -66,4 +68,3 @@ def plot_draw_percentage_by_base_time(data_df, base_times=None):
 #     plt.pie(value_counts, labels=value_counts.index, autopct="%1.1f%%", startangle=140)
 #     plt.title(title)
 #     plt.show()
-

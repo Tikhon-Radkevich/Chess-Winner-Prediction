@@ -113,7 +113,9 @@ def process_moves_time(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def process_moves_eval(data: pd.DataFrame) -> pd.DataFrame:
-    data["evaluations_list"] = data["evaluations_list"].apply(parse_evaluations_list_to_float)
+    data["evaluations_list"] = data["evaluations_list"].apply(
+        parse_evaluations_list_to_float
+    )
     return data
 
 

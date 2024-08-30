@@ -49,7 +49,9 @@ def process_moves_and_evals_and_ckl(moves):
 
 
 def process_and_add_moves(moves, data):
-    chess_moves, evaluations, times, parse_success = process_moves_and_evals_and_ckl(moves)
+    chess_moves, evaluations, times, parse_success = process_moves_and_evals_and_ckl(
+        moves
+    )
 
     data["chess_moves_list"].append(chess_moves)
     data["evaluations_list"].append(evaluations)
@@ -105,4 +107,3 @@ def pgn_zst_to_dataframe(pgn_zst_path, df_dir_path, split_size=125000):
                             file_idx += 1
 
     save_df_and_clear_data(df_dir_path, data, file_idx)
-
