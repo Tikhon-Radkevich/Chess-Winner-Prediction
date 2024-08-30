@@ -17,6 +17,30 @@ INTERIM_FOLDER_PATH = os.path.join(ROOT_DIR, "data", "interim")
 
 EXAMPLE_CSV_DIR = os.path.join(RAW_FOLDER_PATH, EXAMPLE_NAME)
 
+# static_move constants
+# todo: remove commented code
+STATIC_MOVE = "static_move"
+INTERIM_STATIC_MOVE = os.path.join(INTERIM_FOLDER_PATH, STATIC_MOVE)
+# INTERIM_STATIC_MOVE_SPLIT_BALANCED = os.path.join(INTERIM_STATIC_MOVE_SPLIT, "balanced")
+# INTERIM_STATIC_MOVE_SPLIT_ORIGINAL = os.path.join(INTERIM_STATIC_MOVE_SPLIT, "original")
+# INTERIM_STATIC_MOVE_SPLIT_EXTRA = os.path.join(INTERIM_STATIC_MOVE_SPLIT, "extra")
+
+PROCESSED_STATIC_MOVE = os.path.join(PROCESSED_FOLDER_PATH, STATIC_MOVE)
+# PROCESSED_STATIC_MOVE_ORIGINAL = os.path.join(PROCESSED_FOLDER_PATH, STATIC_MOVE, "original")
+# STATIC_MOVE_DATA_PATH = os.path.join(ROOT_DIR, "data", "processed", "static_move")
+GAME_ID = "GameId"
+
+if not os.path.exists(INTERIM_STATIC_MOVE):
+    os.makedirs(INTERIM_STATIC_MOVE)
+# if not os.path.exists(INTERIM_STATIC_MOVE_SPLIT_BALANCED):
+#     os.makedirs(INTERIM_STATIC_MOVE_SPLIT_BALANCED)
+# if not os.path.exists(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL):
+#     os.makedirs(INTERIM_STATIC_MOVE_SPLIT_ORIGINAL)
+# if not os.path.exists(INTERIM_STATIC_MOVE_SPLIT_EXTRA):
+#     os.makedirs(INTERIM_STATIC_MOVE_SPLIT_EXTRA)
+if not os.path.exists(PROCESSED_STATIC_MOVE):
+    os.makedirs(PROCESSED_STATIC_MOVE)
+
 # Results constants
 WHITE_WIN_STR: str = "1-0"
 BLACK_WIN_STR: str = "0-1"
@@ -29,12 +53,12 @@ DRAW_INT = -1
 RESULTS_STR_TO_INT = {
     WHITE_WIN_STR: WHITE_WIN_INT,
     BLACK_WIN_STR: BLACK_WIN_INT,
-    DRAW_STR: DRAW_INT
+    DRAW_STR: DRAW_INT,
 }
 RESULTS_INT_TO_STR = {
     WHITE_WIN_INT: WHITE_WIN_STR,
     BLACK_WIN_INT: BLACK_WIN_STR,
-    DRAW_INT: DRAW_STR
+    DRAW_INT: DRAW_STR,
 }
 
 RESULTS_STR_TO_STR = {
@@ -42,16 +66,14 @@ RESULTS_STR_TO_STR = {
     BLACK_WIN_STR: "Black Win",
     DRAW_STR: "Draw",
     False: "Draw",
-    True: "Win"
+    True: "Win",
 }
 
 # Data processing constants
 MIN_GAME_DURATION = 0  # seconds
+MIN_MOVES_IN_GAME = 4
 
-# TODO add min moves value
-# MIN_MOVES_IN_GAME = 4
-
-BASELINE_COLUMNS = [
+PROCESS_COLUMNS = [
     "Event",
     "WhiteElo",
     "BlackElo",
@@ -59,9 +81,12 @@ BASELINE_COLUMNS = [
     "Result",
     "times_list",
     "Termination",
+    "evaluations_list",
+    "chess_moves_list",
     "ECO",
     "White",
-    "Black"
+    "Black",
+    "parse_success",
 ]
 
 # TARGET_COLUMNS = ["ResultEncoded", "WhiteWin", "BlackWin", "Draw"]
