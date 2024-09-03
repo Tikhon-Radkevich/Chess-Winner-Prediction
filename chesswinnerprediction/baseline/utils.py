@@ -157,7 +157,7 @@ def plot_calibration_curve(model, prob_predict, y_test: pd.Series) -> None:
             name=f"{class_label}",
             ax=ax,
             strategy="uniform",
-            color=colors(i)
+            color=colors(i),
         )
 
         bin_counts = np.zeros((n_bins, n_classes))
@@ -165,7 +165,9 @@ def plot_calibration_curve(model, prob_predict, y_test: pd.Series) -> None:
 
         for bin_i in range(n_bins):
             for j in range(n_classes):
-                bin_counts[bin_i, j] = np.sum(bin_indices[y_test == model.classes_[j]] == bin_i)
+                bin_counts[bin_i, j] = np.sum(
+                    bin_indices[y_test == model.classes_[j]] == bin_i
+                )
 
         ax2 = ax.twinx()
         bottom = np.zeros(n_bins)
@@ -180,7 +182,7 @@ def plot_calibration_curve(model, prob_predict, y_test: pd.Series) -> None:
                 alpha=0.1,
                 edgecolor="black",
                 color=colors(j),
-                label=f'{model.classes_[j]}'
+                label=f"{model.classes_[j]}",
             )
             bottom += bin_counts[:, j]
 
