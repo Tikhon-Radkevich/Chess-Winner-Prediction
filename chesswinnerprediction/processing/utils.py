@@ -16,9 +16,7 @@ def process_elo(data: pd.DataFrame) -> pd.DataFrame:
     data["WhiteElo"] = data["WhiteElo"].astype(np.int16)
     data["BlackElo"] = data["BlackElo"].astype(np.int16)
     data["EloDiff"] = (data["WhiteElo"] - data["BlackElo"]).astype(np.int16)
-    data["MeanElo"] = ((data["WhiteElo"] + data["BlackElo"]) / 2).astype(
-        np.float32
-    )  # external
+    data["MeanElo"] = ((data["WhiteElo"] + data["BlackElo"]) / 2).astype(np.float32)
     return data
 
 
@@ -40,17 +38,7 @@ def process_result(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-def add_external_features(data: pd.DataFrame) -> pd.DataFrame:
-    data["DrawEventProb"] = data.groupby("Event")["Draw"].transform("mean")
-    data["WhiteWinEventProb"] = data.groupby("Event")["WhiteWin"].transform("mean")
-    data["BlackWinEventProb"] = data.groupby("Event")["BlackWin"].transform("mean")
-    return data
-
-
-def drop_data(data: pd.DataFrame) -> pd.DataFrame:
-    # data.drop(columns=["TimeControl"], inplace=True)
-    # data.drop(columns=["Result"], inplace=True)
-    # data.drop(columns=["Event"], inplace=True)
+def drop_columns(data: pd.DataFrame) -> pd.DataFrame:
     data.drop(columns=["times_list"], inplace=True)
 
     data = data[data["GameDuration"] >= MIN_GAME_DURATION]
@@ -71,18 +59,6 @@ def parse_times_list_to_seconds(time_list_str):
 def parse_evaluations_list_to_float(evaluations_list_str):
     # evaluations_list_str[2:-2] - get string without '"[' and ']"' symbols
     return evaluations_list_str[2:-2].split("', '")
-
-
-# def calc_game_duration(time_and_increment):
-#     time_list, increment_time = time_and_increment.values
-#     # - time_list: A list of remaining times for each player in seconds
-#     #       Format: [white_base_time, black_base_time, ..., white_end_time, black_end_time]
-#     # - increment_time: The time increment added after each move
-#
-#     increment = (len(time_list) - 2) * increment_time
-#     base_time_total = sum(time_list[:2])
-#     end_time_total = sum(time_list[-2:])
-#     return base_time_total - end_time_total + increment
 
 
 def calc_game_duration(time_and_increment):
@@ -124,7 +100,6 @@ def process_data_df(data: pd.DataFrame) -> pd.DataFrame:
     df = df[df["Result"] != "*"]
 
     df["Event"] = df["Event"].str.split(" http").str[0]
-    # df = pd.get_dummies(df, columns=["Event"], dtype=np.int8, prefix="", prefix_sep="")
 
     # header data
     df = process_elo(df)
@@ -135,9 +110,7 @@ def process_data_df(data: pd.DataFrame) -> pd.DataFrame:
     df = process_moves_time(df)
     df = process_moves_eval(df)
 
-    # df = add_external_features(df)
-
-    df = drop_data(df)
+    df = drop_columns(df)
 
     return df
 
