@@ -5,7 +5,10 @@ import pandas as pd
 import numpy as np
 import chess
 
-from chesswinnerprediction.static_move.constants import STATIC_MOVE_COLUMNS, PIECE_VALUES
+from chesswinnerprediction.static_move.constants import (
+    STATIC_MOVE_COLUMNS,
+    PIECE_VALUES,
+)
 
 
 def assign_times(group: pd.DataFrame) -> pd.DataFrame:
@@ -23,7 +26,12 @@ def assign_times(group: pd.DataFrame) -> pd.DataFrame:
 
 
 def transform_data(data: pd.DataFrame) -> pd.DataFrame:
-    move_columns = ["GameDurations", "evaluations_list", "times_in_second", "chess_moves_list"]
+    move_columns = [
+        "GameDurations",
+        "evaluations_list",
+        "times_in_second",
+        "chess_moves_list",
+    ]
     data[move_columns] = data[move_columns].map(literal_eval)
 
     data = data.explode(move_columns).reset_index(drop=True)
@@ -62,7 +70,7 @@ def transform_data(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_test_train_valid_game_ids(
-        data: pd.DataFrame, random_state: int, n_test: int, n_train: int, n_valid: int
+    data: pd.DataFrame, random_state: int, n_test: int, n_train: int, n_valid: int
 ):
     test_ids = data.sample(n=n_test, random_state=random_state)["GameId"]
     remaining_data = data[~data["GameId"].isin(test_ids)]
@@ -76,12 +84,12 @@ def get_test_train_valid_game_ids(
 
 
 def explode_and_save_data(
-        interim_df: pd.DataFrame,
-        path_to_save: str,
-        n_test: int,
-        n_train: int,
-        n_valid: int,
-        random_state: int,
+    interim_df: pd.DataFrame,
+    path_to_save: str,
+    n_test: int,
+    n_train: int,
+    n_valid: int,
+    random_state: int,
 ):
     np.random.seed(random_state)
 
@@ -97,7 +105,7 @@ def explode_and_save_data(
     )
 
     for ids, csv_name in zip(
-            train_test_valid_ids, ["train.csv", "test.csv", "valid.csv"]
+        train_test_valid_ids, ["train.csv", "test.csv", "valid.csv"]
     ):
         file_path = os.path.join(path_to_save, csv_name)
         df = transformed_data[transformed_data["GameId"].isin(ids)]
@@ -120,7 +128,9 @@ def process_game(moves_pgn):
 
     for i, move_san in enumerate(moves_pgn):
         move = board.parse_san(move_san)
-        captured_piece = board.piece_at(move.to_square)  # Check the destination square before the move
+        captured_piece = board.piece_at(
+            move.to_square
+        )  # Check the destination square before the move
 
         # If there's a captured piece, update values
         if captured_piece is not None:
@@ -147,15 +157,19 @@ def process_all_games(df):
     results = []
 
     for game_id, group in df.groupby("GameId"):
-        white_scores, black_scores, n_pieces = process_game(group["chess_moves_list"].tolist())
+        white_scores, black_scores, n_pieces = process_game(
+            group["chess_moves_list"].tolist()
+        )
 
-        game_results = pd.DataFrame({
-            "GameId": game_id,
-            "i_move": np.arange(1, len(white_scores) + 1),
-            "w_score": white_scores,
-            "b_score": black_scores,
-            "n_pieces": n_pieces
-        })
+        game_results = pd.DataFrame(
+            {
+                "GameId": game_id,
+                "i_move": np.arange(1, len(white_scores) + 1),
+                "w_score": white_scores,
+                "b_score": black_scores,
+                "n_pieces": n_pieces,
+            }
+        )
 
         results.append(game_results)
 
@@ -174,34 +188,51 @@ def process_moves_pgn(df):
 def add_time_features(df: pd.DataFrame):
     epsilon = 1e-6
 
-    df["white_time_per_move"] = (1 - df["white_remaining_time_norm"]) / df["i_move"] + epsilon
-    df["black_time_per_move"] = (1 - df["black_remaining_time_norm"]) / df["i_move"] + epsilon
+    df["white_time_per_move"] = (1 - df["white_remaining_time_norm"]) / df[
+        "i_move"
+    ] + epsilon
+    df["black_time_per_move"] = (1 - df["black_remaining_time_norm"]) / df[
+        "i_move"
+    ] + epsilon
 
-    df["white_increment_pct_in_time_per_move"] = (df["IncrementTime"] / df["BaseTime"]) / df["white_time_per_move"]
-    df["black_increment_pct_in_time_per_move"] = (df["IncrementTime"] / df["BaseTime"]) / df["black_time_per_move"]
+    df["white_increment_pct_in_time_per_move"] = (
+        df["IncrementTime"] / df["BaseTime"]
+    ) / df["white_time_per_move"]
+    df["black_increment_pct_in_time_per_move"] = (
+        df["IncrementTime"] / df["BaseTime"]
+    ) / df["black_time_per_move"]
 
-    df["white_increment_pct_in_time_per_move"] = df["white_increment_pct_in_time_per_move"].clip(lower=0.0, upper=1.0)
-    df["black_increment_pct_in_time_per_move"] = df["black_increment_pct_in_time_per_move"].clip(lower=0.0, upper=1.0)
+    df["white_increment_pct_in_time_per_move"] = df[
+        "white_increment_pct_in_time_per_move"
+    ].clip(lower=0.0, upper=1.0)
+    df["black_increment_pct_in_time_per_move"] = df[
+        "black_increment_pct_in_time_per_move"
+    ].clip(lower=0.0, upper=1.0)
 
-    df["white_time_will_end_on_move"] = df["white_remaining_time_norm"] / df["white_time_per_move"]
-    df["black_time_will_end_on_move"] = df["black_remaining_time_norm"] / df["black_time_per_move"]
+    df["white_time_will_end_on_move"] = (
+        df["white_remaining_time_norm"] / df["white_time_per_move"]
+    )
+    df["black_time_will_end_on_move"] = (
+        df["black_remaining_time_norm"] / df["black_time_per_move"]
+    )
 
-    df["white_time_will_end_on_move"] = df["white_time_will_end_on_move"].clip(lower=0, upper=200)
-    df["black_time_will_end_on_move"] = df["black_time_will_end_on_move"].clip(lower=0, upper=200)
+    df["white_time_will_end_on_move"] = df["white_time_will_end_on_move"].clip(
+        lower=0, upper=200
+    )
+    df["black_time_will_end_on_move"] = df["black_time_will_end_on_move"].clip(
+        lower=0, upper=200
+    )
 
     return df
 
 
-def process_df(df: pd.DataFrame, n, random_state, i_move_threshold):
+def process_df(df: pd.DataFrame, n, random_state):
     valid_con = (
-            (df["i_move"] == 1) &
-            (df["black_remaining_time_norm"] == df["white_remaining_time_norm"]) &
-            (df["black_remaining_time_norm"] == 1.0)
+        (df["i_move"] == 1)
+        & (df["black_remaining_time_norm"] == df["white_remaining_time_norm"])
+        & (df["black_remaining_time_norm"] == 1.0)
     )
     df = df[df["GameId"].isin(df[valid_con]["GameId"])]
-
-    # df = df[df["i_move"] < i_move_threshold]
-    # df["i_move"] = df["i_move"].clip(upper=i_move_threshold)
 
     df = process_moves_pgn(df)
     df.drop(columns=["chess_moves_list"], inplace=True)

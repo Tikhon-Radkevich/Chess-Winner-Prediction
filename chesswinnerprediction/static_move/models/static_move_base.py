@@ -23,4 +23,6 @@ class StaticMoveBaseModel:
 
     def score(self, x, y, sample_weight=None):
         y_predict = self.predict(x)
-        self.balanced_accuracy = metrics.balanced_accuracy_score(y, y_predict, sample_weight=sample_weight)
+        self.balanced_accuracy = metrics.balanced_accuracy_score(
+            y, y_predict, sample_weight=sample_weight
+        )
