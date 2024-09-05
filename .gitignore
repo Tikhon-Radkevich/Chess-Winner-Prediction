@@ -2,10 +2,8 @@
 *mlruns/
 
 # Data
-data/external/
-data/interim/
-data/processed/
-data/raw/
+data/
+!data/processed/demo/
 
 # Mac OS-specific storage files
 .DS_Store
