@@ -28,6 +28,7 @@ def load_train_valid_test(
     valid_sample_size: float = 0.1,
     test_sample_size: float = 1.0,
     random_state: int = BASELINE_RANDOM_STATE,
+    drop_game_id: bool = True,
 ) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     """
     Returns: X_train, y_train, X_valid, y_valid, X_test, y_test
@@ -51,6 +52,11 @@ def load_train_valid_test(
     X_train, y_train = get_x_and_y(train_data, predict_draws=True)
     X_valid, y_valid = get_x_and_y(valid_data, predict_draws=True)
     X_test, y_test = get_x_and_y(test_data, predict_draws=True)
+
+    if drop_game_id:
+        X_train.drop(columns=["GameId"], inplace=True)
+        X_valid.drop(columns=["GameId"], inplace=True)
+        X_test.drop(columns=["GameId"], inplace=True)
 
     return X_train, y_train, X_valid, y_valid, X_test, y_test
 

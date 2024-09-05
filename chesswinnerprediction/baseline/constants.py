@@ -1,6 +1,7 @@
 BASELINE_RANDOM_STATE = 42
 
 BASELINE_COLUMNS = [
+    "GameId",
     "Result",
     "EloDiff",
     "MeanElo",
