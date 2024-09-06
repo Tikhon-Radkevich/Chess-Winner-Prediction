@@ -1,3 +1,4 @@
+# Static Move Constants
 RANDOM_STATE = 42
 
 PIECE_VALUES = [0, 1, 3, 3, 5, 9, 0]
@@ -20,5 +21,6 @@ STATIC_MOVE_COLUMNS = [
     "i_move",
 ]
 
+# Default values for static move scripts
 TRAIN_VALID_TEST = ("train.csv", "valid.csv", "test.csv")
 DEFAULT_N_SAMPLES = (60_000, 25_000, None)
