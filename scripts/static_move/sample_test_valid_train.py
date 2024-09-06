@@ -7,7 +7,6 @@ from chesswinnerprediction.static_move.processing.utils import process_df
 from chesswinnerprediction.constants import INTERIM_STATIC_MOVE, PROCESSED_STATIC_MOVE
 from chesswinnerprediction.static_move.constants import (
     TRAIN_VALID_TEST,
-    I_MOVE_THRESHOLD,
     DEFAULT_N_SAMPLES,
 )
 
@@ -24,11 +23,11 @@ def main(dir_name, train_valid_test_samples):
         train_valid_test_samples = DEFAULT_N_SAMPLES
 
     for csv_file, n, i_move_threshold in zip(
-        TRAIN_VALID_TEST, train_valid_test_samples, I_MOVE_THRESHOLD
+        TRAIN_VALID_TEST, train_valid_test_samples
     ):
         print(f"Processing {csv_file}...")
         df = pd.read_csv(os.path.join(interim_dir_path, csv_file))
-        df = process_df(df, n, random_state, i_move_threshold)
+        df = process_df(df, n, random_state)
         df.to_csv(os.path.join(processed_dir_path, csv_file), index=False)
 
 
