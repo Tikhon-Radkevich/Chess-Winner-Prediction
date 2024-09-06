@@ -93,7 +93,7 @@ def explode_and_save_data(
 ):
     np.random.seed(random_state)
 
-    interim_df["GameId"] = interim_df.index
+    # interim_df["GameId"] = interim_df.index
 
     train_test_valid_ids = get_test_train_valid_game_ids(
         interim_df, random_state, n_test, n_train, n_valid
@@ -226,7 +226,7 @@ def add_time_features(df: pd.DataFrame):
     return df
 
 
-def process_df(df: pd.DataFrame, n, random_state):
+def process_df(df: pd.DataFrame, n=None, random_state=42) -> pd.DataFrame:
     valid_con = (
         (df["i_move"] == 1)
         & (df["black_remaining_time_norm"] == df["white_remaining_time_norm"])
