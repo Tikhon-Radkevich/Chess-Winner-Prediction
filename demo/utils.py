@@ -1,10 +1,10 @@
 import joblib
 import pandas as pd
 import chess
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 from chesswinnerprediction.static_move.processing.utils import process_df
-from chesswinnerprediction.constants import BASELINE_MODEL, STATIC_MOVE_MODEL, BASELINE_DEMO_DATA, STATIC_MOVE_DEMO_DATA
+from chesswinnerprediction.constants import BASELINE_MODEL, STATIC_MOVE_MODEL, INTERIM_DEMO_DATA
 
 
 def static_move_prediction(static_move_model, game):
@@ -34,12 +34,9 @@ def process_game(static_move_model, game):
     return game_dict
 
 
-def get_games():
+def get_games(baseline_data_df, static_move_data_df):
     baseline_model = joblib.load(BASELINE_MODEL)
     static_move_model = joblib.load(STATIC_MOVE_MODEL)
-
-    static_move_data_df = pd.read_csv(STATIC_MOVE_DEMO_DATA)
-    baseline_data_df = pd.read_csv(BASELINE_DEMO_DATA)
 
     games = dict()
     game_ids = static_move_data_df["GameId"].unique()
@@ -59,7 +56,26 @@ def get_games():
     return games, baseline_model.classes_, static_move_model.classes_
 
 
-def get_game_prediction_plot(game, labels, i_move):
+def add_game_info(games, static_move_data_df):
+    interim_data = pd.read_csv(INTERIM_DEMO_DATA)
+    for game_id in games.keys():
+        game_row = interim_data[interim_data["GameId"] == game_id]
+        games[game_id]["TimeControl"] = game_row["TimeControl"].values[0]
+        games[game_id]["WhiteElo"] = game_row["WhiteElo"].values[0]
+        games[game_id]["BlackElo"] = game_row["BlackElo"].values[0]
+
+        static_move_game = static_move_data_df[static_move_data_df["GameId"] == game_id]
+        w_times = static_move_game["white_remaining_time_norm"]
+        b_times = static_move_game["black_remaining_time_norm"]
+        for i_move, w_time, b_time in zip(static_move_game["i_move"], w_times, b_times):
+            games[game_id]["game"][i_move]["white_remaining_time"] = w_time
+            games[game_id]["game"][i_move]["black_remaining_time"] = b_time
+
+    return games
+
+
+def generate_game_prediction_plot(game, labels, i_move):
+    # Prepare plot data
     plot_data = {
         labels[0]: [],
         labels[1]: [],
@@ -73,13 +89,27 @@ def get_game_prediction_plot(game, labels, i_move):
     df = pd.DataFrame(plot_data)
     df.index = range(1, len(df) + 1)
 
-    # Plotting the data
-    ax = df.plot(kind="line", figsize=(8, 3), title="Result Prediction Over Moves")
+    fig = go.Figure()
 
-    # Adding the vertical line at x = i_move
-    plt.axvline(x=i_move, color='red', linestyle='--', label=f"Move {i_move}")
+    for label in labels:
+        fig.add_trace(go.Scatter(x=df.index, y=df[label], mode='lines', name=label))
 
-    # Add labels and legend
-    plt.xlabel("Move")
-    plt.ylabel("Prediction Proba")
-    plt.legend()
+    # Add vertical line at x = i_move
+    fig.add_vline(
+        x=i_move,
+        line=dict(color="gray", dash="dash"),
+        annotation_text=f"Move {i_move}",
+        annotation_position="top right"
+    )
+
+    # Customize the layout
+    fig.update_layout(
+        title="Result Prediction Over Moves",
+        xaxis_title="Move",
+        yaxis_title="Prediction Proba",
+        template="plotly_dark",
+        legend_title="Labels",
+        width=800, height=350
+    )
+    return fig
+
