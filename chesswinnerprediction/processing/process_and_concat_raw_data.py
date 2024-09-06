@@ -28,5 +28,6 @@ def process_and_concat_raw_data(dir_path, output_file):
                 [combined_data, processed_data], ignore_index=True
             )
 
+    combined_data["GameId"] = combined_data.index
     print(f"Saving data to {output_file}")
     combined_data.to_csv(output_file, index=False)
