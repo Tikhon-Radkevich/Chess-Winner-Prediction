@@ -17,6 +17,15 @@ INTERIM_FOLDER_PATH = os.path.join(ROOT_DIR, "data", "interim")
 
 EXAMPLE_CSV_DIR = os.path.join(RAW_FOLDER_PATH, EXAMPLE_NAME)
 
+MODELS_DIR = os.path.join(ROOT_DIR, "models")
+BASELINE_MODEL = os.path.join(MODELS_DIR, "baseline.pkl")
+STATIC_MOVE_MODEL = os.path.join(MODELS_DIR, "static_move.pkl")
+
+DEMO_DATA_DIR = os.path.join(PROCESSED_FOLDER_PATH, "demo")
+BASELINE_DEMO_DATA = os.path.join(DEMO_DATA_DIR, "baseline.csv")
+STATIC_MOVE_DEMO_DATA = os.path.join(DEMO_DATA_DIR, "static_move.csv")
+INTERIM_DEMO_DATA = os.path.join(DEMO_DATA_DIR, "interim.csv")
+
 # static_move constants
 # todo: remove commented code
 STATIC_MOVE = "static_move"
