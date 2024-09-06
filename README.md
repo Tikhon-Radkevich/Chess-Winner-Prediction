@@ -6,6 +6,16 @@
 
 A short description of the project.
 
+```commandline
+git clone https://github.com/Tikhon-Radkevich/Chess-Winner-Prediction.git
+cd Chess-Winner-Prediction
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e .
+streamlit run ./demo/main.py
+```
+
 ## Project Organization
 
 ```
