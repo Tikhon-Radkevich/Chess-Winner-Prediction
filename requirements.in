@@ -2,4 +2,6 @@ jupyter
 mlflow
 optuna
 streamlit
+plotly
 chess
+zstandard
