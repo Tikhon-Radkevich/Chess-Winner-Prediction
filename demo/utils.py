@@ -24,7 +24,9 @@ def process_game(static_move_model, game):
     board = chess.Board()
     game_dict = dict()
     st_predictions = static_move_prediction(static_move_model, game)
-    for ((_, (i_move, move_san)), predict) in zip(game[["i_move", "chess_moves_list"]].iterrows(), st_predictions):
+    for ((_, (i_move, move_san)), predict) in (
+            zip(game[["i_move", "chess_moves_list"]].iterrows(), st_predictions)
+    ):
         move = board.parse_san(move_san)
         board.push(move)
         game_dict[i_move] = {
@@ -61,15 +63,20 @@ def add_game_info(games, static_move_data_df):
     for game_id in games.keys():
         game_row = interim_data[interim_data["GameId"] == game_id]
         games[game_id]["TimeControl"] = game_row["TimeControl"].values[0]
-        games[game_id]["WhiteElo"] = game_row["WhiteElo"].values[0]
-        games[game_id]["BlackElo"] = game_row["BlackElo"].values[0]
+        games[game_id]["WhiteElo"] = str(game_row["WhiteElo"].values[0])
+        games[game_id]["BlackElo"] = str(game_row["BlackElo"].values[0])
+        games[game_id]["White"] = game_row["White"].values[0]
+        games[game_id]["Black"] = game_row["Black"].values[0]
 
         static_move_game = static_move_data_df[static_move_data_df["GameId"] == game_id]
         w_times = static_move_game["white_remaining_time_norm"]
         b_times = static_move_game["black_remaining_time_norm"]
-        for i_move, w_time, b_time in zip(static_move_game["i_move"], w_times, b_times):
-            games[game_id]["game"][i_move]["white_remaining_time"] = w_time
-            games[game_id]["game"][i_move]["black_remaining_time"] = b_time
+        evals = static_move_game["eval"]
+        base_time = static_move_game["BaseTime"].values[0]
+        for i_move, w_time, b_time, ev in zip(static_move_game["i_move"], w_times, b_times, evals):
+            games[game_id]["game"][i_move]["white_remaining_time"] = int(w_time*base_time)
+            games[game_id]["game"][i_move]["black_remaining_time"] = int(b_time*base_time)
+            games[game_id]["game"][i_move]["eval"] = ev
 
     return games
 
@@ -104,12 +111,17 @@ def generate_game_prediction_plot(game, labels, i_move):
 
     # Customize the layout
     fig.update_layout(
-        title="Result Prediction Over Moves",
+        title={
+            'text': "Result Prediction Over Moves",
+            'x': 0.5,  # Centers the title
+            'xanchor': 'center'
+        },
         xaxis_title="Move",
         yaxis_title="Prediction Proba",
         template="plotly_dark",
         legend_title="Labels",
-        width=800, height=350
+        margin=dict(l=40, r=40, t=40, b=40),
+        width=800, height=300
     )
     return fig
 
