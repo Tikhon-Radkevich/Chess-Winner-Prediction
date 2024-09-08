@@ -1,5 +1,6 @@
 *dev/
 *mlruns/
+start_mlflow.sh
 
 # Data
 data/
