@@ -22,9 +22,7 @@ def main(dir_name, train_valid_test_samples):
     if train_valid_test_samples is None:
         train_valid_test_samples = DEFAULT_N_SAMPLES
 
-    for csv_file, n, i_move_threshold in zip(
-        TRAIN_VALID_TEST, train_valid_test_samples
-    ):
+    for csv_file, n in zip(TRAIN_VALID_TEST, train_valid_test_samples):
         print(f"Processing {csv_file}...")
         df = pd.read_csv(os.path.join(interim_dir_path, csv_file))
         df = process_df(df, n, random_state)
