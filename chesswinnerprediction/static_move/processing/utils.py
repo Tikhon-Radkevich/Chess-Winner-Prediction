@@ -93,8 +93,6 @@ def explode_and_save_data(
 ):
     np.random.seed(random_state)
 
-    # interim_df["GameId"] = interim_df.index
-
     train_test_valid_ids = get_test_train_valid_game_ids(
         interim_df, random_state, n_test, n_train, n_valid
     )
@@ -112,7 +110,7 @@ def explode_and_save_data(
         df.to_csv(file_path, index=False)
 
 
-def process_game(moves_pgn):
+def process_game_with_promotion(moves_pgn: list) -> tuple:
     board = chess.Board()
     num_moves = len(moves_pgn)
 
@@ -120,19 +118,16 @@ def process_game(moves_pgn):
     black_scores = np.empty(num_moves, dtype=np.int16)
     n_pieces = np.empty(num_moves, dtype=np.int16)
 
-    # Initialize material scores at the start (39 is the sum of all non-king pieces)
-    # todo pawn can reach the end of the board and became another piece; but I manually set the start score to 39.
-    # this thing leads to negative score values.
     white_score, black_score = 39, 39
     n_pieces_on_board = 32
 
     for i, move_san in enumerate(moves_pgn):
         move = board.parse_san(move_san)
-        captured_piece = board.piece_at(
-            move.to_square
-        )  # Check the destination square before the move
+        from_square = board.piece_at(move.from_square)
+        captured_piece = board.piece_at(move.to_square)
 
-        # If there's a captured piece, update values
+        promotion_piece = move.promotion
+
         if captured_piece is not None:
             n_pieces_on_board -= 1
 
@@ -142,10 +137,15 @@ def process_game(moves_pgn):
             else:
                 black_score -= piece_value
 
-        # Push the move to update the board state
+        if promotion_piece is not None and from_square.piece_type == chess.PAWN:
+            promoted_value = PIECE_VALUES[promotion_piece]
+            if from_square.color == chess.WHITE:
+                white_score += promoted_value - PIECE_VALUES[chess.PAWN]
+            else:
+                black_score += promoted_value - PIECE_VALUES[chess.PAWN]
+
         board.push(move)
 
-        # Store the current values after the move
         n_pieces[i] = n_pieces_on_board
         white_scores[i] = white_score
         black_scores[i] = black_score
@@ -153,11 +153,11 @@ def process_game(moves_pgn):
     return white_scores, black_scores, n_pieces
 
 
-def process_all_games(df):
+def process_all_games(df: pd.DataFrame) -> pd.DataFrame:
     results = []
 
     for game_id, group in df.groupby("GameId"):
-        white_scores, black_scores, n_pieces = process_game(
+        white_scores, black_scores, n_pieces = process_game_with_promotion(
             group["chess_moves_list"].tolist()
         )
 
@@ -174,12 +174,13 @@ def process_all_games(df):
         results.append(game_results)
 
     games_df = pd.concat(results, ignore_index=True)
-    # todo: fix process_game func, remove clip.
-    games_df[["w_score", "b_score"]] = games_df[["w_score", "b_score"]].clip(lower=0)
+    games_df[["w_score", "b_score"]] = games_df[["w_score", "b_score"]].clip(
+        lower=0, upper=39
+    )
     return games_df
 
 
-def process_moves_pgn(df):
+def process_moves_pgn(df: pd.DataFrame) -> pd.DataFrame:
     pieces_data = process_all_games(df)
     df = pd.merge(df, pieces_data, on=["GameId", "i_move"], how="left")
     return df
