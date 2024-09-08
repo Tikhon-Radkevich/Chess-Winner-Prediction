@@ -3,5 +3,6 @@ mlflow
 optuna
 streamlit
 plotly
+seaborn
 chess
 zstandard
