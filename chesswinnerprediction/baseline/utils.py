@@ -7,11 +7,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from sklearn.utils.class_weight import compute_class_weight
-from sklearn.calibration import CalibrationDisplay, calibration_curve
+from sklearn.calibration import CalibrationDisplay
 from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
-
-from IPython.display import display, HTML
 
 from config import PROCESSED_FOLDER_PATH, BASELINE_EXPERIMENT, MLRUNS_FOLDER_PATH
 from chesswinnerprediction.constants import RESULTS_STR_TO_STR, DRAW_STR
@@ -163,7 +161,7 @@ def plot_calibration_curve(model, prob_predict, y_test: pd.Series) -> None:
             name=f"{class_label}",
             ax=ax,
             strategy="uniform",
-            color=colors(i),
+            **{"color": colors(i)},
         )
 
         bin_counts = np.zeros((n_bins, n_classes))
