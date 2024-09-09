@@ -1,11 +1,11 @@
 # ChessWinnerPrediction
 
 <a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
-    <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter"  alt=""/>
+    <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter"  alt="12"/>
 </a>
 
 <a target="_blank" href="https://mlflow.org/">
-    <img src="https://img.shields.io/badge/Mlflow-Tracking-0194E1?logo=mlflow"  alt=""/>
+    <img src="https://img.shields.io/badge/Mlflow-Tracking-0194E1?logo=mlflow"  alt="12"/>
 </a>
 
 <a target="_blank" href="https://optuna.org/">
@@ -70,7 +70,6 @@ I made two different solutions:
 2. **Static Move Solution**:  
    This approach makes predictions using in-game data, including move evaluations, remaining time, number of pieces on the board, and more. 
 
----
 
 ## Installation and Running a Demo
 
