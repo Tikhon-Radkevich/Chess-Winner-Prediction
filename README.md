@@ -1,12 +1,7 @@
 # ChessWinnerPrediction
 
-<a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
-    <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter"  alt="12"/>
-</a>
-
-<a target="_blank" href="https://mlflow.org/">
-    <img src="https://img.shields.io/badge/Mlflow-Tracking-0194E1?logo=mlflow"  alt="12"/>
-</a>
+[![CCDS](https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter)](https://cookiecutter-data-science.drivendata.org/)
+[![Mlflow](https://img.shields.io/badge/Mlflow-Tracking-0194E1?logo=mlflow)](https://mlflow.org/)
 
 <a target="_blank" href="https://optuna.org/">
     <img src="https://img.shields.io/badge/Optuna-Hyperparameter%20Optimization-48D1CC?logo=optuna" />
