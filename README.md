@@ -2,46 +2,16 @@
 
 [![CCDS](https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter)](https://cookiecutter-data-science.drivendata.org/)
 [![Mlflow](https://img.shields.io/badge/Mlflow-Tracking-0194E1?logo=mlflow)](https://mlflow.org/)
-
-<a target="_blank" href="https://optuna.org/">
-    <img src="https://img.shields.io/badge/Optuna-Hyperparameter%20Optimization-48D1CC?logo=optuna" />
-</a>
-
-<a target="_blank" href="https://streamlit.io/">
-    <img src="https://img.shields.io/badge/Streamlit-Web%20app%20framework-FF4B4B?logo=streamlit" />
-</a>
-
-<a target="_blank" href="https://github.com/niklasf/python-chess">
-    <img src="https://img.shields.io/badge/Chess-Python%20Library-000000?logo=python" />
-</a>
-
-<a target="_blank" href="https://scikit-learn.org/">
-    <img src="https://img.shields.io/badge/Scikit--Learn-Machine%20Learning-F7931E?logo=scikit-learn" />
-</a>
-
-<a target="_blank" href="https://pandas.pydata.org/">
-    <img src="https://img.shields.io/badge/Pandas-Data%20Manipulation-150B33?logo=pandas" />
-</a>
-
-<a target="_blank" href="https://numpy.org/">
-    <img src="https://img.shields.io/badge/Numpy-Scientific%20Computing-013243?logo=numpy" />
-</a>
-
-<a target="_blank" href="https://plotly.com/">
-    <img src="https://img.shields.io/badge/Plotly-Data%20Visualization-3F4F75?logo=plotly" />
-</a>
-
-<a target="_blank" href="https://seaborn.pydata.org/">
-    <img src="https://img.shields.io/badge/Seaborn-Data%20Visualization-3776AB?logo=seaborn" />
-</a>
-
-<a target="_blank" href="https://pypi.org/project/zstandard/">
-    <img src="https://img.shields.io/badge/Zstandard-Compression-FF9933?logo=python" />
-</a>
-
-<a target="_blank" href="https://jupyter.org/">
-    <img src="https://img.shields.io/badge/Jupyter-Notebook-F37626?logo=jupyter" />
-</a>
+[![Optuna](https://img.shields.io/badge/Optuna-Hyperparameter%20Optimization-48D1CC?logo=optuna)](https://optuna.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Web%20app%20framework-FF4B4B?logo=streamlit)](https://streamlit.io/)
+[![Chess](https://img.shields.io/badge/Chess-Python%20Library-000000?logo=python)](https://github.com/niklasf/python-chess)
+[![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Machine%20Learning-F7931E?logo=scikit-learn)](https://scikit-learn.org/)
+[![Pandas](https://img.shields.io/badge/Pandas-Data%20Manipulation-150B33?logo=pandas)](https://pandas.pydata.org/)
+[![Numpy](https://img.shields.io/badge/Numpy-Scientific%20Computing-013243?logo=numpy)](https://numpy.org/)
+[![Plotly](https://img.shields.io/badge/Plotly-Data%20Visualization-3F4F75?logo=plotly)](https://plotly.com/)
+[![Seaborn](https://img.shields.io/badge/Seaborn-Data%20Visualization-3776AB?logo=seaborn)](https://seaborn.pydata.org/)
+[![Zstandard](https://img.shields.io/badge/Zstandard-Compression-FF9933?logo=python)](https://pypi.org/project/zstandard/)
+[![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?logo=jupyter)](https://jupyter.org/)
 
 ---
 
