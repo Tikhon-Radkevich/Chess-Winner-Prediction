@@ -16,8 +16,7 @@ PYTHON_INTERPRETER = python
 requirements:
 	$(PYTHON_INTERPRETER) -m pip install -U pip
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
-	
-
+	$(PYTHON_INTERPRETER) -m pip install -e .
 
 
 ## Delete all compiled Python files
@@ -26,19 +25,11 @@ clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
 
-## Lint using flake8 and black (use `make format` to do formatting)
-.PHONY: lint
-lint:
-	flake8 chesswinnerprediction
-	isort --check --diff --profile black chesswinnerprediction
-	black --check --config pyproject.toml chesswinnerprediction
 
 ## Format source code with black
 .PHONY: format
 format:
-	black --config pyproject.toml chesswinnerprediction
-
-
+	ruff --config pyproject.toml chesswinnerprediction
 
 
 ## Set up python interpreter environment
