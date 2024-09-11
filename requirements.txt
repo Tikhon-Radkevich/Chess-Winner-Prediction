@@ -419,6 +419,8 @@ rpds-py==0.20.0
     #   referencing
 rsa==4.9
     # via google-auth
+ruff==0.6.4
+    # via -r requirements.in
 scikit-learn==1.5.1
     # via mlflow
 scipy==1.14.1

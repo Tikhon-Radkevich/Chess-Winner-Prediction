@@ -1,3 +1,4 @@
+ruff
 jupyter
 mlflow
 optuna
